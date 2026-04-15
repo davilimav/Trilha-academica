@@ -1,0 +1,227 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #eef5f2, #dfe9f3);
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding:40px;
+  background: white;
+  height: 30px;
+}
+
+.logo img {
+  height: 100px;
+  width: auto;
+}
+
+
+nav a {
+  margin: 0 10px;
+  color: #555;
+}
+
+.btn {
+  background: #3aa76d;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* LAYOUT */
+.container {
+  display: flex;
+  padding: 30px;
+  gap: 25px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.profile {
+  text-align: center;
+}
+
+.pro{
+width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile img {
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin-top: 20px;
+}
+
+.sidebar li {
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.sidebar .active {
+  background: #eaf7f0;
+  color: #3aa76d;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+}
+
+.desc {
+  margin: 10px 0 20px;
+  color: #666;
+}
+
+/* TOP CARDS */
+.top-cards {
+  display: flex;
+  gap: 20px;
+}
+
+/* MAIN CARD */
+.main-card {
+  flex: 2;
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.user {
+  display: flex;
+  gap: 15px;
+}
+
+.user img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.progress {
+  margin-top: 20px;
+}
+
+.label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bar {
+  height: 10px;
+  background: #eee;
+  border-radius: 20px;
+  margin-top: 5px;
+}
+
+.fill {
+  width: 60%;
+  height: 100%;
+  background: #3aa76d;
+  border-radius: 20px;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+/* DISCIPLINAS */
+.disc-card {
+  flex: 1;
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.disc {
+  margin: 15px 0;
+}
+
+.mini-bar {
+  height: 8px;
+  background: #eee;
+  border-radius: 20px;
+  margin-top: 5px;
+}
+
+.mini-bar div {
+  height: 100%;
+  background: #3aa76d;
+  border-radius: 20px;
+}
+
+.full {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* TAGS */
+.tags {
+  margin: 20px 0;
+}
+
+.tags span {
+  background: #eaf7f0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  margin-right: 10px;
+}
+
+/* CARDS */
+.cards {
+  display: flex;
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 15px;
+  flex: 1;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.card img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.card button {
+  margin-top: 10px;
+  width: 100%;
+  background: #3aa76d;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+}

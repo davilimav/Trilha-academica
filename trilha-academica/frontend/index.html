@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trilha Acadêmica - Sua jornada de aprendizado</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <img src="imagens/index/Logo1.jpeg" alt="Logo Trilha Acadêmica">
+  </div>
+
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Trilhas Acadêmicas</a>
+    <a href="#">Sobre</a>
+    <a href="#">Contato</a>
+  </nav>
+
+  <div class="auth" id="authButtons">
+    <a href="login.html"><button class="login">Login</button></a>
+    <a href="cadastro.html"><button class="register">Cadastrar</button></a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-container">
+    
+    <div class="hero-text">
+      <h1>Encontre sua trilha acadêmica ideal</h1>
+      <p>Descubra as melhores trilhas de aprendizado personalizadas com base nos seus interesses e objetivos.</p>
+      <button class="cta" id="ctaButton">Comece Agora</button>
+    </div>
+
+    <div class="hero-img">
+      <img src="imagens/index/Meio.png" alt="Estudante">
+    </div>
+
+  </div>
+</section>
+
+<div class="search">
+  <input type="text" id="searchInput" placeholder="Digite seu curso ou interesse...">
+  <button id="searchBtn">Buscar</button>
+</div>
+
+<section class="features">
+  <h2>Descubra tudo que a Trilha Acadêmica oferece!</h2>
+  <p>Receba recomendações com base nos seus interesses e histórico acadêmico.</p>
+
+  <div class="cards">
+    <div class="card" data-card="sugestoes">
+      <img src="imagens/index/card1.jpeg" alt="Sugestões">
+      <h3>Sugestões Personalizadas</h3>
+      <p>Recomendações de trilhas baseadas no seu perfil e áreas de interesse.</p>
+    </div>
+
+    <div class="card" data-card="areas">
+      <img src="imagens/index/card2.jpeg" alt="Áreas">
+      <h3>Áreas de Conhecimento</h3>
+      <p>Explore diversas áreas e encontre o caminho ideal para sua carreira.</p>
+    </div>
+
+    <div class="card" data-card="disciplinas">
+      <img src="imagens/index/card3.jpeg" alt="Disciplinas">
+      <h3>Guia de Disciplinas</h3>
+      <p>Acompanhe o progresso e planeje seus estudos de forma eficiente.</p>
+    </div>
+
+    <div class="card" data-card="dicas">
+      <img src="imagens/index/card4.png" alt="Dicas">
+      <h3>Dicas e Recursos</h3>
+      <p>Materiais complementares e dicas para potencializar seu aprendizado.</p>  
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <h2>
+    Comece sua jornada 
+    <a href="#" id="finalCta">agora</a>
+  </h2>
+</section>
+
+<script>
+  // Verificar se usuário está logado
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const authContainer = document.getElementById('authButtons');
+  const ctaButton = document.getElementById('ctaButton');
+  const finalCta = document.getElementById('finalCta');
+
+  // Função para atualizar botões baseado no login
+  function atualizarBotoes() {
+    if (token && user.name) {
+      // Usuário logado - mostrar dashboard e sair
+      authContainer.innerHTML = `
+        <span style="color: #2e7d32; display: flex; align-items: center; gap: 10px; font-weight: 500;">
+          Olá, ${user.name.split(' ')[0]}
+        </span>
+        <button class="login" id="btnDashboard">Dashboard</button>
+        <button class="register" id="btnLogout">Sair</button>
+      `;
+      
+      // Adicionar eventos
+      document.getElementById('btnDashboard')?.addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+      });
+      
+      document.getElementById('btnLogout')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.reload();
+      });
+    } else {
+      // Usuário não logado - mostrar login e cadastro
+      authContainer.innerHTML = `
+        <a href="login.html"><button class="login">Login</button></a>
+        <a href="cadastro.html"><button class="register">Cadastrar</button></a>
+      `;
+    }
+  }
+
+  // Função do botão "Comece Agora"
+  function handleCtaClick() {
+    if (token && user.name) {
+      window.location.href = 'dashboard.html';
+    } else {
+      window.location.href = 'cadastro.html';
+    }
+  }
+
+  // Adicionar eventos aos botões CTA
+  if (ctaButton) ctaButton.addEventListener('click', handleCtaClick);
+  if (finalCta) finalCta.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleCtaClick();
+  });
+
+  // Evento de busca
+  const searchBtn = document.getElementById('searchBtn');
+  const searchInput = document.getElementById('searchInput');
+  
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      const termo = searchInput?.value.trim();
+      if (termo) {
+        if (token && user.name) {
+          alert(`Buscando por: ${termo}\nEm breve você verá trilhas relacionadas!`);
+        } else {
+          alert(`Faça login para ver trilhas relacionadas a "${termo}"`);
+        }
+      } else {
+        alert('Digite um curso ou interesse para buscar');
+      }
+    });
+  }
+
+  // Permitir busca com Enter
+  if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchBtn?.click();
+      }
+    });
+  }
+
+  // Eventos dos cards de recursos
+  document.querySelectorAll('.card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const titulo = card.querySelector('h3')?.textContent || 'Recurso';
+      if (token && user.name) {
+        alert(`Em breve: ${titulo}\nFuncionalidade em desenvolvimento!`);
+      } else {
+        alert(`Faça login para acessar "${titulo}"`);
+      }
+    });
+  });
+
+  // Inicializar
+  atualizarBotoes();
+</script>
+
+</body>
+</html>

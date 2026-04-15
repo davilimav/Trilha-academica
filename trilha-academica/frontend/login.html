@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Trilha Acadêmica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #166534;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #16a34a;
+      box-shadow: 0 0 0 2px rgba(22,163,74,0.2);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #16a34a;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #15803d;
+    }
+
+    .btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    .footer a {
+      color: #16a34a;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .footer .divider {
+      margin: 0 8px;
+      color: #9ca3af;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 20px;
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Bem-vindo</h2>
+
+    <div id="errorMessage" class="error-message"></div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="email@exemplo.com">
+      </div>
+
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="senha" placeholder="********">
+      </div>
+
+      <button type="submit" class="btn" id="btnLogin">Entrar</button>
+    </form>
+
+    <div class="footer">
+      <a href="cadastro.html">Criar conta</a>
+      <span class="divider">|</span>
+      <a href="recuperar.html">Esqueci minha senha</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api/auth';
+
+    const form = document.getElementById('loginForm');
+    const btnLogin = document.getElementById('btnLogin');
+    const errorMessage = document.getElementById('errorMessage');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      // Validação básica
+      if (!email || !senha) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Preencha todos os campos';
+        return;
+      }
+
+      if (!email.includes('@') || !email.includes('.')) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Digite um email válido';
+        return;
+      }
+
+      if (senha.length < 6) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Senha deve ter no mínimo 6 caracteres';
+        return;
+      }
+
+      // Esconder mensagem de erro anterior
+      errorMessage.style.display = 'none';
+      
+      // Desabilitar botão e mostrar loading
+      btnLogin.disabled = true;
+      btnLogin.innerHTML = '<span class="loading"></span> Entrando...';
+
+      try {
+        const response = await fetch(`${API_URL}/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email,
+            password: senha
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Salvar token e dados do usuário
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          // Redirecionar para dashboard
+          window.location.href = 'dashboard.html';
+        } else {
+          errorMessage.style.display = 'block';
+          errorMessage.innerHTML = data.error || 'Email ou senha inválidos';
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Erro de conexão com o servidor';
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = 'Entrar';
+      }
+    });
+  </script>
+
+</body>
+</html>

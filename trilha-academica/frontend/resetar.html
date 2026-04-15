@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Redefinir Senha - Trilha Acadêmica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
+    .container {
+      background: #fff;
+      padding: 35px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    h2 {
+      text-align: center;
+      color: #166534;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      outline: none;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #16a34a;
+      box-shadow: 0 0 0 2px rgba(22,163,74,0.2);
+    }
+
+    .toggle {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #9ca3af;
+      user-select: none;
+    }
+
+    .toggle:hover {
+      color: #16a34a;
+    }
+
+    .strength {
+      height: 6px;
+      border-radius: 5px;
+      background: #e5e7eb;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    .strength-bar {
+      height: 100%;
+      width: 0%;
+      transition: 0.3s;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #16a34a;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #15803d;
+    }
+
+    .btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .msg {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .error {
+      color: #dc2626;
+      background: #fee2e2;
+    }
+
+    .success {
+      color: #065f46;
+      background: #d1fae5;
+    }
+
+    .info {
+      color: #1e40af;
+      background: #dbeafe;
+      margin-bottom: 15px;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .back-link a {
+      color: #16a34a;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Redefinir Senha</h2>
+    <p>Digite sua nova senha</p>
+
+    <div id="tokenInfo" class="msg info" style="display: none;"></div>
+
+    <div class="input-group">
+      <input type="password" id="senha" placeholder="Nova senha">
+      <span class="toggle" onclick="toggleSenha('senha')">👁️</span>
+    </div>
+
+    <div class="strength">
+      <div class="strength-bar" id="barra"></div>
+    </div>
+
+    <div class="input-group">
+      <input type="password" id="confirmar" placeholder="Confirmar senha">
+      <span class="toggle" onclick="toggleSenha('confirmar')">👁️</span>
+    </div>
+
+    <button class="btn" id="btnSalvar">Salvar nova senha</button>
+
+    <div id="errorMsg" class="msg error"></div>
+    <div id="successMsg" class="msg success"></div>
+
+    <div class="back-link">
+      <a href="login.html">← Voltar para o login</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api/auth';
+
+    // Capturar token da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    const senhaInput = document.getElementById('senha');
+    const confirmarInput = document.getElementById('confirmar');
+    const barra = document.getElementById('barra');
+    const btnSalvar = document.getElementById('btnSalvar');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+    const tokenInfo = document.getElementById('tokenInfo');
+
+    // Verificar se token existe
+    if (!token) {
+      errorMsg.innerHTML = 'Token não encontrado. Solicite uma nova recuperação de senha.';
+      errorMsg.style.display = 'block';
+      btnSalvar.disabled = true;
+    } else {
+      tokenInfo.innerHTML = '✓ Token válido. Digite sua nova senha.';
+      tokenInfo.style.display = 'block';
+    }
+
+    function hideMessages() {
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+    }
+
+    function showError(message) {
+      errorMsg.innerHTML = message;
+      errorMsg.style.display = 'block';
+    }
+
+    function showSuccess(message) {
+      successMsg.innerHTML = message;
+      successMsg.style.display = 'block';
+    }
+
+    // Medidor de força da senha
+    senhaInput.addEventListener('input', () => {
+      const senha = senhaInput.value;
+      let forca = 0;
+
+      if (senha.length >= 6) forca++;
+      if (/[A-Z]/.test(senha)) forca++;
+      if (/[0-9]/.test(senha)) forca++;
+      if (/[^A-Za-z0-9]/.test(senha)) forca++;
+
+      const cores = ['#ef4444', '#f59e0b', '#eab308', '#22c55e'];
+      const larguras = ['25%', '50%', '75%', '100%'];
+      
+      if (forca > 0) {
+        barra.style.width = larguras[forca - 1];
+        barra.style.background = cores[forca - 1];
+      } else {
+        barra.style.width = '0%';
+      }
+    });
+
+    function toggleSenha(id) {
+      const campo = document.getElementById(id);
+      campo.type = campo.type === 'password' ? 'text' : 'password';
+    }
+
+    async function salvar() {
+      hideMessages();
+
+      const senha = senhaInput.value;
+      const confirmar = confirmarInput.value;
+
+      // Validações
+      if (!token) {
+        showError('Token inválido. Solicite uma nova recuperação.');
+        return;
+      }
+
+      if (senha.length < 6) {
+        showError('A senha deve ter no mínimo 6 caracteres');
+        return;
+      }
+
+      if (senha !== confirmar) {
+        showError('As senhas não conferem');
+        return;
+      }
+
+      // Desabilitar botão e mostrar loading
+      btnSalvar.disabled = true;
+      btnSalvar.innerHTML = '<span class="loading"></span> Salvando...';
+
+      try {
+        const response = await fetch(`${API_URL}/reset-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: token,
+            newPassword: senha
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showSuccess('Senha alterada com sucesso! Redirecionando para o login...');
+          
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+        } else {
+          showError(data.error || 'Erro ao redefinir senha. Token inválido ou expirado.');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        showError('Erro de conexão com o servidor');
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = 'Salvar nova senha';
+      }
+    }
+
+    // Adicionar evento ao botão
+    btnSalvar.addEventListener('click', salvar);
+
+    // Permitir enviar com Enter
+    const inputs = [senhaInput, confirmarInput];
+    inputs.forEach(input => {
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && btnSalvar.disabled === false) {
+          salvar();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
