@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Verificação de Email - Trilha Acadêmica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/verificacao-email.css">
+</head>
+<body>
+
+  <div class="container">
+    <h2>Verificação de Email</h2>
+
+    <div id="errorMessage" class="error-message"></div>
+    <div id="successMessage" class="success-message"></div>
+
+    <form id="verificationForm">
+      <div class="form-group">
+        <label>Código de Verificação</label>
+        <input type="text" id="code" placeholder="Digite o código de 6 dígitos" maxlength="6">
+      </div>
+
+      <button type="submit" class="btn" id="btnVerify">Verificar</button>
+    </form>
+
+    <div class="footer">
+      <a href="#" id="resendCode">Reenviar código</a>
+      <span class="divider">|</span>
+      <a href="login.html">Voltar ao Login</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api/auth';
+
+    const form = document.getElementById('verificationForm');
+    const btnVerify = document.getElementById('btnVerify');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const resendLink = document.getElementById('resendCode');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const code = document.getElementById('code').value.trim();
+
+      if (!code || code.length !== 6) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Digite um código válido de 6 dígitos';
+        return;
+      }
+
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+
+      btnVerify.disabled = true;
+      btnVerify.innerHTML = '<span class="loading"></span> Verificando...';
+
+      try {
+        const response = await fetch(`${API_URL}/verify-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            code: code
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          successMessage.style.display = 'block';
+          successMessage.innerHTML = 'Email verificado com sucesso! Redirecionando...';
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 2000);
+        } else {
+          errorMessage.style.display = 'block';
+          errorMessage.innerHTML = data.error || 'Código inválido';
+        }
+      } catch (error) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Erro de conexão com o servidor';
+      } finally {
+        btnVerify.disabled = false;
+        btnVerify.innerHTML = 'Verificar';
+      }
+    });
+
+    resendLink.addEventListener('click', async function(e) {
+      e.preventDefault();
+
+      resendLink.style.pointerEvents = 'none';
+      resendLink.textContent = 'Enviando...';
+
+      try {
+        const response = await fetch(`${API_URL}/resend-verification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          successMessage.style.display = 'block';
+          successMessage.innerHTML = 'Código reenviado para seu email';
+        } else {
+          errorMessage.style.display = 'block';
+          errorMessage.innerHTML = data.error || 'Erro ao reenviar código';
+        }
+      } catch (error) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Erro de conexão com o servidor';
+      } finally {
+        setTimeout(() => {
+          resendLink.style.pointerEvents = 'auto';
+          resendLink.textContent = 'Reenviar código';
+        }, 30000);
+      }
+    });
+  </script>
+
+</body>
+</html>

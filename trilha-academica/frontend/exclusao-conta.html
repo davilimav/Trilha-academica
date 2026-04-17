@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Exclusão de Conta - Trilha Acadêmica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/exclusao-conta.css">
+</head>
+<body>
+
+  <div class="container">
+    <h2>Exclusão de Conta</h2>
+
+    <div class="warning">
+      <strong>Atenção:</strong> Esta ação é irreversível. Todos os seus dados serão permanentemente excluídos.
+    </div>
+
+    <div id="errorMessage" class="error-message"></div>
+    <div id="successMessage" class="success-message"></div>
+
+    <form id="deleteForm">
+      <div class="form-group">
+        <label>Confirme sua Senha</label>
+        <input type="password" id="password" placeholder="Digite sua senha atual">
+      </div>
+
+      <div class="form-group">
+        <label>Digite "EXCLUIR" para confirmar</label>
+        <input type="text" id="confirmation" placeholder="EXCLUIR">
+      </div>
+
+      <button type="submit" class="btn" id="btnDelete">Excluir Conta Permanentemente</button>
+      <button type="button" class="btn btn-secondary" id="btnCancel">Cancelar</button>
+    </form>
+
+    <div class="footer">
+      <a href="dashboard.html">Voltar ao Dashboard</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api/auth';
+
+    const form = document.getElementById('deleteForm');
+    const btnDelete = document.getElementById('btnDelete');
+    const btnCancel = document.getElementById('btnCancel');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const password = document.getElementById('password').value;
+      const confirmation = document.getElementById('confirmation').value.trim().toUpperCase();
+
+      if (!password) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Digite sua senha';
+        return;
+      }
+
+      if (confirmation !== 'EXCLUIR') {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Digite "EXCLUIR" para confirmar';
+        return;
+      }
+
+      if (!confirm('Tem certeza de que deseja excluir sua conta permanentemente? Esta ação não pode ser desfeita.')) {
+        return;
+      }
+
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+
+      btnDelete.disabled = true;
+      btnDelete.innerHTML = '<span class="loading"></span> Excluindo...';
+
+      try {
+        const response = await fetch(`${API_URL}/delete-account`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            password: password
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          successMessage.style.display = 'block';
+          successMessage.innerHTML = 'Conta excluída com sucesso. Redirecionando...';
+
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 3000);
+        } else {
+          errorMessage.style.display = 'block';
+          errorMessage.innerHTML = data.error || 'Erro ao excluir conta';
+        }
+      } catch (error) {
+        errorMessage.style.display = 'block';
+        errorMessage.innerHTML = 'Erro de conexão com o servidor';
+      } finally {
+        btnDelete.disabled = false;
+        btnDelete.innerHTML = 'Excluir Conta Permanentemente';
+      }
+    });
+
+    btnCancel.addEventListener('click', function() {
+      window.location.href = 'dashboard.html';
+    });
+  </script>
+
+</body>
+</html>
