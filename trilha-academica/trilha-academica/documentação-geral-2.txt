@@ -1,0 +1,1721 @@
+# 📚 Guia Completo de Implementação - Trilha Acadêmica
+
+## Documento de Referência do Projeto
+
+---
+
+## 1. VISÃO GERAL DO PROJETO
+
+### 1.1 Objetivo
+O **Trilha Acadêmica** é um sistema inteligente de recomendação de trilhas de aprendizado personalizadas. O usuário responde um questionário sobre seu nível de conhecimento em diferentes áreas, e o sistema utiliza **Machine Learning** para recomendar as melhores trilhas de estudo.
+
+### 1.2 Tecnologias Utilizadas
+
+| Camada | Tecnologia | Versão |
+|--------|------------|--------|
+| **Backend API** | Node.js + Express | 18.x |
+| **Banco de Dados** | MySQL | 8.0 |
+| **Machine Learning** | Python + Flask + scikit-learn | 3.9+ |
+| **Frontend** | HTML5 + CSS3 + JavaScript | - |
+| **Autenticação** | JWT (JSON Web Token) | - |
+
+### 1.3 Arquitetura do Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         FRONTEND                                │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐   │
+│  │  Login   │ │ Cadastro │ │Questionário│ │   Dashboard     │   │
+│  └────┬─────┘ └────┬─────┘ └─────┬────┘ └────────┬─────────┘   │
+└───────┼────────────┼─────────────┼───────────────┼─────────────┘
+        │            │             │               │
+        ▼            ▼             ▼               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    BACKEND NODE.JS (Porta 3000)                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ Autenticação │  │  Usuários    │  │  Recomendação Gateway │  │
+│  │     JWT      │  │  (CRUD)      │  │                      │  │
+│  └──────────────┘  └──────────────┘  └──────────┬───────────┘  │
+└─────────────────────────────────────────────────┼───────────────┘
+                                                  │
+                                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 SERVIDOR PYTHON (Porta 5000)                    │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                    ALGORITMO DE ML                          │ │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │ │
+│  │  │ Questionário│→ │Perfil Usuário│→ │Cosine Similarity   │ │ │
+│  │  │             │  │             │  │Random Forest        │ │ │
+│  │  └─────────────┘  └─────────────┘  └──────────┬──────────┘ │ │
+│  └────────────────────────────────────────────────┼────────────┘ │
+└──────────────────────────────────────────────────┼──────────────┘
+                                                    │
+                                                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    BANCO DE DADOS MySQL                          │
+│  ┌─────────┐  ┌──────────────┐  ┌────────────────────────────┐  │
+│  │  users  │  │questionario_ │  │    recomendacoes_salvas    │  │
+│  │         │  │  respostas   │  │                            │  │
+│  └─────────┘  └──────────────┘  └────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. ESTRUTURA DE DIRETÓRIOS
+
+```
+trilha-academica/
+│
+├── 📁 backend/                     # API Node.js
+│   ├── 📁 config/
+│   │   └── database.js             # Conexão com MySQL
+│   ├── 📁 controllers/
+│   │   ├── authController.js       # Login/Registro
+│   │   └── recomendacaoController.js # Recomendações
+│   ├── 📁 routes/
+│   │   ├── authRoutes.js           # Rotas de autenticação
+│   │   └── recomendacaoRoutes.js   # Rotas de recomendação
+│   ├── 📁 middlewares/
+│   │   └── auth.js                 # Verificação JWT
+│   └── 📁 services/
+│       └── recomendacaoService.js  # Comunicação com Python
+│
+├── 📁 python-recomendacao/         # Servidor ML
+│   ├── app.py                      # API Flask + Algoritmo
+│   └── requirements.txt            # Dependências Python
+│
+├── 📁 frontend/                    # Interface do usuário
+│   ├── 📁 css/
+│   │   └── style.css               # Estilos globais
+│   ├── 📁 js/
+│   │   ├── auth.js                 # Funções de autenticação
+│   │   └── config.js               # Configuração de ambiente
+│   ├── index.html                  # Landing page
+│   ├── login.html                  # Tela de login
+│   ├── cadastro.html               # Tela de cadastro
+│   ├── dashboard.html              # Dashboard do usuário
+│   └── questionario.html           # Questionário + Recomendações
+│
+├── .env                            # Variáveis de ambiente
+├── .gitignore                      # Arquivos ignorados no Git
+├── package.json                    # Dependências Node.js
+├── server.js                       # Ponto de entrada da API
+├── database.sql                    # Script de criação do banco
+└── README.md                       # Documentação do projeto
+```
+
+---
+
+## 3. BANCO DE DADOS
+
+### 3.1 Script Completo (`database.sql`)
+
+```sql
+-- =====================================================
+-- TRILHA ACADÊMICA - BANCO DE DADOS COMPLETO
+-- =====================================================
+
+-- Criar banco de dados
+CREATE DATABASE IF NOT EXISTS trilha_academica;
+USE trilha_academica;
+
+-- =====================================================
+-- TABELA DE USUÁRIOS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- TABELA DE RESPOSTAS DO QUESTIONÁRIO
+-- =====================================================
+CREATE TABLE IF NOT EXISTS questionario_respostas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    programacao_nivel INT DEFAULT 0,
+    dados_nivel INT DEFAULT 0,
+    design_nivel INT DEFAULT 0,
+    seguranca_nivel INT DEFAULT 0,
+    marketing_nivel INT DEFAULT 0,
+    experiencia_anos INT DEFAULT 0,
+    objetivo VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user (user_id)
+);
+
+-- =====================================================
+-- TABELA DE RECOMENDAÇÕES SALVAS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS recomendacoes_salvas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    trilha_nome VARCHAR(100) NOT NULL,
+    similaridade DECIMAL(5,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- =====================================================
+-- INSERIR USUÁRIO ADMIN (senha: admin123)
+-- =====================================================
+INSERT INTO users (name, email, password) VALUES 
+('Administrador', 'admin@trilha.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MrE6Z5nU5qZqZqZqZqZqZqZqZqZqZ');
+
+-- =====================================================
+-- VERIFICAR CRIAÇÃO
+-- =====================================================
+SHOW TABLES;
+SELECT * FROM users;
+```
+
+---
+
+## 4. BACKEND NODE.JS
+
+### 4.1 Configuração (`backend/config/database.js`)
+
+```javascript
+const mysql = require('mysql2/promise');
+require('dotenv').config();
+
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+async function testConnection() {
+    try {
+        const connection = await pool.getConnection();
+        console.log('✅ Banco de dados conectado!');
+        connection.release();
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao conectar:', error.message);
+        return false;
+    }
+}
+
+module.exports = { pool, testConnection };
+```
+
+### 4.2 Autenticação (`backend/controllers/authController.js`)
+
+```javascript
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { pool } = require('../config/database');
+
+// Registrar usuário
+const register = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+        }
+        
+        const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'Email já cadastrado' });
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const [result] = await pool.query(
+            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            [name, email, hashedPassword]
+        );
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Cadastro realizado com sucesso!',
+            user: { id: result.insertId, name, email }
+        });
+    } catch (error) {
+        console.error('Register error:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+};
+
+// Login
+const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+        }
+        
+        const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        
+        if (users.length === 0) {
+            return res.status(401).json({ error: 'Email ou senha inválidos' });
+        }
+        
+        const user = users[0];
+        const isValid = await bcrypt.compare(password, user.password);
+        
+        if (!isValid) {
+            return res.status(401).json({ error: 'Email ou senha inválidos' });
+        }
+        
+        const token = jwt.sign(
+            { id: user.id, name: user.name, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+        
+        res.json({
+            success: true,
+            token,
+            user: { id: user.id, name: user.name, email: user.email }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Erro no login' });
+    }
+};
+
+module.exports = { register, login };
+```
+
+### 4.3 Middleware de Autenticação (`backend/middlewares/auth.js`)
+
+```javascript
+const jwt = require('jsonwebtoken');
+
+const authMiddleware = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Token não fornecido' });
+    }
+    
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch {
+        res.status(403).json({ error: 'Token inválido' });
+    }
+};
+
+module.exports = { authMiddleware };
+```
+
+### 4.4 Serviço de Recomendação (`backend/services/recomendacaoService.js`)
+
+```javascript
+const axios = require('axios');
+
+const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:5000';
+
+class RecomendacaoService {
+    async getPerguntas() {
+        try {
+            const response = await axios.get(`${PYTHON_API_URL}/questionario/perguntas`);
+            return response.data;
+        } catch (error) {
+            console.error('Erro ao buscar perguntas:', error.message);
+            return { perguntas: [] };
+        }
+    }
+    
+    async getRecomendacoes(respostas) {
+        try {
+            const response = await axios.post(`${PYTHON_API_URL}/questionario/recomendar`, respostas);
+            return response.data;
+        } catch (error) {
+            console.error('Erro ao obter recomendações:', error.message);
+            return { success: false, error: 'Serviço indisponível', recomendacoes: [] };
+        }
+    }
+    
+    async healthCheck() {
+        try {
+            const response = await axios.get(`${PYTHON_API_URL}/health`);
+            return response.data;
+        } catch (error) {
+            return { status: 'offline' };
+        }
+    }
+}
+
+module.exports = new RecomendacaoService();
+```
+
+### 4.5 Controller de Recomendação (`backend/controllers/recomendacaoController.js`)
+
+```javascript
+const recomendacaoService = require('../services/recomendacaoService');
+const { pool } = require('../config/database');
+
+const getPerguntas = async (req, res) => {
+    try {
+        const perguntas = await recomendacaoService.getPerguntas();
+        res.json(perguntas);
+    } catch (error) {
+        console.error('Erro ao buscar perguntas:', error);
+        res.status(500).json({ error: 'Erro ao buscar perguntas' });
+    }
+};
+
+const salvarRespostas = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { programacao_nivel, dados_nivel, design_nivel, seguranca_nivel, marketing_nivel, experiencia_anos, objetivo } = req.body;
+        
+        await pool.query(
+            `INSERT INTO questionario_respostas 
+             (user_id, programacao_nivel, dados_nivel, design_nivel, seguranca_nivel, marketing_nivel, experiencia_anos, objetivo) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+             programacao_nivel = VALUES(programacao_nivel),
+             dados_nivel = VALUES(dados_nivel),
+             design_nivel = VALUES(design_nivel),
+             seguranca_nivel = VALUES(seguranca_nivel),
+             marketing_nivel = VALUES(marketing_nivel),
+             experiencia_anos = VALUES(experiencia_anos),
+             objetivo = VALUES(objetivo)`,
+            [userId, programacao_nivel, dados_nivel, design_nivel, seguranca_nivel, marketing_nivel, experiencia_anos, objetivo]
+        );
+        
+        res.json({ success: true, message: 'Respostas salvas com sucesso' });
+    } catch (error) {
+        console.error('Erro ao salvar respostas:', error);
+        res.status(500).json({ error: 'Erro ao salvar respostas' });
+    }
+};
+
+const getRecomendacoes = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const [respostas] = await pool.query('SELECT * FROM questionario_respostas WHERE user_id = ?', [userId]);
+        
+        if (!respostas[0]) {
+            return res.json({ success: false, message: 'Responda o questionário primeiro' });
+        }
+        
+        const recomendacoes = await recomendacaoService.getRecomendacoes(respostas[0]);
+        res.json(recomendacoes);
+    } catch (error) {
+        console.error('Erro ao obter recomendações:', error);
+        res.status(500).json({ error: 'Erro ao obter recomendações' });
+    }
+};
+
+const salvarRecomendacao = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { trilha_nome, similaridade } = req.body;
+        
+        await pool.query(
+            'INSERT INTO recomendacoes_salvas (user_id, trilha_nome, similaridade) VALUES (?, ?, ?)',
+            [userId, trilha_nome, similaridade]
+        );
+        
+        res.json({ success: true, message: 'Recomendação salva com sucesso' });
+    } catch (error) {
+        console.error('Erro ao salvar recomendação:', error);
+        res.status(500).json({ error: 'Erro ao salvar recomendação' });
+    }
+};
+
+module.exports = { getPerguntas, salvarRespostas, getRecomendacoes, salvarRecomendacao };
+```
+
+### 4.6 Rotas (`backend/routes/authRoutes.js` e `recomendacaoRoutes.js`)
+
+**`authRoutes.js`:**
+```javascript
+const express = require('express');
+const { register, login } = require('../controllers/authController');
+
+const router = express.Router();
+
+router.post('/register', register);
+router.post('/login', login);
+
+module.exports = router;
+```
+
+**`recomendacaoRoutes.js`:**
+```javascript
+const express = require('express');
+const { getPerguntas, salvarRespostas, getRecomendacoes, salvarRecomendacao } = require('../controllers/recomendacaoController');
+const { authMiddleware } = require('../middlewares/auth');
+
+const router = express.Router();
+
+router.get('/perguntas', getPerguntas);
+router.post('/respostas', authMiddleware, salvarRespostas);
+router.get('/recomendacoes', authMiddleware, getRecomendacoes);
+router.post('/salvar', authMiddleware, salvarRecomendacao);
+
+module.exports = router;
+```
+
+### 4.7 Servidor Principal (`server.js`)
+
+```javascript
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+const { testConnection } = require('./backend/config/database');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+const authRoutes = require('./backend/routes/authRoutes');
+const recomendacaoRoutes = require('./backend/routes/recomendacaoRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/recomendacao', recomendacaoRoutes);
+
+app.get('/', (req, res) => {
+    res.json({ message: 'API Trilha Acadêmica funcionando!' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, async () => {
+    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
+    await testConnection();
+});
+```
+
+---
+
+## 5. SERVIDOR PYTHON (MACHINE LEARNING)
+
+### 5.1 Dependências (`python-recomendacao/requirements.txt`)
+
+```txt
+flask==2.3.3
+flask-cors==4.0.0
+numpy==1.24.3
+scikit-learn==1.3.0
+```
+
+### 5.2 Algoritmo de Recomendação (`python-recomendacao/app.py`)
+
+```python
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+app = Flask(__name__)
+CORS(app)
+
+# =====================================================
+# CATÁLOGO DE CURSOS (5 áreas × 3 níveis)
+# =====================================================
+
+areas_conhecimento = {
+    "Programação": {
+        "Iniciante": [
+            "Lógica de Programação", "Introdução à Programação", "Algoritmos Básicos",
+            "Estruturas de Dados Fundamentais", "Linguagem C - Fundamentos",
+            "Git e Controle de Versão", "HTML5 e CSS3", "JavaScript Básico",
+            "Python para Iniciantes", "Pensamento Computacional"
+        ],
+        "Intermediário": [
+            "Programação Orientada a Objetos", "Banco de Dados SQL", "APIs RESTful",
+            "Desenvolvimento Web com Node.js", "React.js", "TypeScript",
+            "Design Patterns", "Testes Unitários", "Metodologias Ágeis", "Docker Básico"
+        ],
+        "Avançado": [
+            "Arquitetura de Software", "Microservices", "DevOps e CI/CD",
+            "Segurança de Aplicações", "Performance e Otimização", "Sistemas Distribuídos",
+            "Machine Learning Engineering", "Blockchain", "Computação em Nuvem (AWS/Azure)",
+            "Kubernetes"
+        ]
+    },
+    "Ciência de Dados": {
+        "Iniciante": [
+            "Estatística Básica", "Python para Dados", "Pandas e NumPy",
+            "Visualização de Dados", "SQL para Análise", "Excel Avançado",
+            "Power BI", "Tableau", "Storytelling com Dados", "Ética em Dados"
+        ],
+        "Intermediário": [
+            "Machine Learning Supervisionado", "Machine Learning Não Supervisionado",
+            "Feature Engineering", "Model Evaluation", "Deep Learning Fundamentos",
+            "NLP Básico", "Time Series", "Big Data com Spark", "Cloud Data Engineering",
+            "Data Warehousing"
+        ],
+        "Avançado": [
+            "Computer Vision", "Reinforcement Learning", "LLMs e Generative AI",
+            "MLOps", "Data Pipeline em Produção", "Algoritmos de Otimização",
+            "Model Explainability (XAI)", "Data Governance", "ML em Tempo Real",
+            "Pesquisa Operacional"
+        ]
+    },
+    "Design UX/UI": {
+        "Iniciante": [
+            "Fundamentos do Design", "Psicologia das Cores", "Tipografia",
+            "Figma Básico", "Adobe XD", "Wireframing", "Prototipagem",
+            "User Research Básico", "Heurísticas de Nielsen", "Acessibilidade Digital"
+        ],
+        "Intermediário": [
+            "Design System", "UX Writing", "Testes de Usabilidade", "Design Responsivo",
+            "Motion Design", "Interação Humano-Computador", "Análise de Métricas UX",
+            "Personas e Jornadas", "Design Thinking", "Service Design"
+        ],
+        "Avançado": [
+            "Design Estratégico", "UX Leadership", "Design Ops", "Gestão de Projetos UX",
+            "UX para IA", "Design Ético", "Design Inclusivo", "Product Management",
+            "Inovação e Criatividade", "Design Research Avançado"
+        ]
+    },
+    "Cybersegurança": {
+        "Iniciante": [
+            "Fundamentos de Segurança", "Redes de Computadores", "Criptografia Básica",
+            "Segurança de Senhas", "Phishing e Engenharia Social", "Firewall e Antivírus",
+            "Backup e Recuperação", "Privacidade de Dados (LGPD)", "Segurança em Nuvem Básica",
+            "Segurança de Dispositivos Móveis"
+        ],
+        "Intermediário": [
+            "Ethical Hacking", "Análise de Vulnerabilidades", "Segurança em Aplicações Web",
+            "Testes de Invasão (Pentest)", "Forensics Computacional", "Segurança em APIs",
+            "Zero Trust Architecture", "SIEM e Monitoramento", "Governança de Segurança",
+            "Gestão de Riscos"
+        ],
+        "Avançado": [
+            "Red Teaming", "Blue Teaming", "Malware Analysis", "Reverse Engineering",
+            "Segurança em IoT", "Blockchain Security", "Cloud Security Avançado",
+            "DevSecOps", "Threat Intelligence", "Incident Response Avançado"
+        ]
+    },
+    "Marketing Digital": {
+        "Iniciante": [
+            "Fundamentos de Marketing", "SEO Básico", "Google Analytics",
+            "Facebook Ads", "Instagram para Negócios", "Email Marketing",
+            "Copywriting", "Conteúdo para Redes", "Landing Pages", "Inbound Marketing"
+        ],
+        "Intermediário": [
+            "Google Ads Avançado", "SEO Avançado", "Marketing de Conteúdo",
+            "Social Media Strategy", "E-commerce Management", "Marketing Automation",
+            "CRM e Leads", "Growth Hacking", "Análise de Métricas", "Branding Digital"
+        ],
+        "Avançado": [
+            "Marketing Analytics", "Customer Data Platform", "Marketing AI",
+            "Programmatic Ads", "Omnichannel Strategy", "Performance Marketing",
+            "Conversion Rate Optimization", "Retention Marketing", "Product Marketing",
+            "Marketing Strategy"
+        ]
+    }
+}
+
+# =====================================================
+# CLASSE DE RECOMENDAÇÃO
+# =====================================================
+
+class TrilhaRecommender:
+    def __init__(self):
+        self.cursos = []
+        self.cursos_info = {}
+        self.trilhas = {}
+        self._build_course_matrix()
+        self._build_trilhas_matrix()
+    
+    def _build_course_matrix(self):
+        idx = 0
+        for area, niveis in areas_conhecimento.items():
+            for nivel, cursos_lista in niveis.items():
+                nivel_score = {"Iniciante": 1, "Intermediário": 2, "Avançado": 3}[nivel]
+                for curso in cursos_lista:
+                    self.cursos.append(curso)
+                    self.cursos_info[curso] = {
+                        "area": area,
+                        "nivel": nivel,
+                        "nivel_score": nivel_score,
+                        "index": idx
+                    }
+                    idx += 1
+        return len(self.cursos)
+    
+    def _build_trilhas_matrix(self):
+        trilhas_config = {
+            "Desenvolvedor Full Stack": {
+                "areas": ["Programação"],
+                "niveis": ["Iniciante", "Intermediário", "Avançado"],
+                "pesos": [0.2, 0.4, 0.4],
+                "descricao": "Domine front-end, back-end e banco de dados",
+                "duracao": "8 meses",
+                "cursos_chave": ["JavaScript Básico", "React.js", "Node.js", "Banco de Dados SQL"]
+            },
+            "Cientista de Dados": {
+                "areas": ["Ciência de Dados", "Programação"],
+                "niveis": ["Iniciante", "Intermediário", "Avançado"],
+                "pesos": [0.15, 0.35, 0.5],
+                "descricao": "Aprenda a extrair insights e construir modelos preditivos",
+                "duracao": "10 meses",
+                "cursos_chave": ["Python para Dados", "Machine Learning Supervisionado", "Estatística Básica"]
+            },
+            "UX/UI Designer": {
+                "areas": ["Design UX/UI"],
+                "niveis": ["Iniciante", "Intermediário", "Avançado"],
+                "pesos": [0.3, 0.4, 0.3],
+                "descricao": "Crie experiências digitais centradas no usuário",
+                "duracao": "6 meses",
+                "cursos_chave": ["Figma Básico", "UX Writing", "Design System"]
+            },
+            "Especialista em Cybersegurança": {
+                "areas": ["Cybersegurança", "Programação"],
+                "niveis": ["Iniciante", "Intermediário", "Avançado"],
+                "pesos": [0.15, 0.35, 0.5],
+                "descricao": "Proteja sistemas e dados contra ameaças",
+                "duracao": "9 meses",
+                "cursos_chave": ["Fundamentos de Segurança", "Ethical Hacking", "Red Teaming"]
+            },
+            "Marketing Digital Avançado": {
+                "areas": ["Marketing Digital"],
+                "niveis": ["Iniciante", "Intermediário", "Avançado"],
+                "pesos": [0.2, 0.4, 0.4],
+                "descricao": "Domine estratégias digitais de crescimento",
+                "duracao": "7 meses",
+                "cursos_chave": ["SEO Básico", "Google Ads Avançado", "Growth Hacking"]
+            },
+            "Frontend Developer": {
+                "areas": ["Programação", "Design UX/UI"],
+                "niveis": ["Iniciante", "Intermediário"],
+                "pesos": [0.4, 0.6],
+                "descricao": "Crie interfaces web modernas e responsivas",
+                "duracao": "5 meses",
+                "cursos_chave": ["HTML5 e CSS3", "React.js", "UX/UI Fundamentals"]
+            },
+            "Backend Developer": {
+                "areas": ["Programação"],
+                "niveis": ["Iniciante", "Intermediário", "Avançado"],
+                "pesos": [0.2, 0.4, 0.4],
+                "descricao": "Construa APIs e sistemas escaláveis",
+                "duracao": "6 meses",
+                "cursos_chave": ["Node.js", "APIs RESTful", "Banco de Dados SQL"]
+            },
+            "DevOps Engineer": {
+                "areas": ["Programação", "Cybersegurança"],
+                "niveis": ["Intermediário", "Avançado"],
+                "pesos": [0.3, 0.7],
+                "descricao": "Automatize infraestrutura e deployment",
+                "duracao": "7 meses",
+                "cursos_chave": ["Docker Básico", "Kubernetes", "CI/CD"]
+            }
+        }
+        
+        self.trilhas = {}
+        for nome, config in trilhas_config.items():
+            vetor = [0] * len(self.cursos)
+            
+            for area in config["areas"]:
+                for nivel, peso in zip(config["niveis"], config["pesos"]):
+                    if area in areas_conhecimento and nivel in areas_conhecimento[area]:
+                        for curso in areas_conhecimento[area][nivel]:
+                            if curso in self.cursos_info:
+                                idx = self.cursos_info[curso]["index"]
+                                vetor[idx] = max(vetor[idx], peso)
+            
+            self.trilhas[nome] = {
+                "cursos": vetor,
+                "nivel_medio": self._calcular_nivel_medio(config["niveis"], config["pesos"]),
+                "areas": config["areas"],
+                "descricao": config["descricao"],
+                "duracao": config["duracao"],
+                "cursos_chave": config["cursos_chave"]
+            }
+        
+        return len(self.trilhas)
+    
+    def _calcular_nivel_medio(self, niveis, pesos):
+        nivel_map = {"Iniciante": 1, "Intermediário": 2, "Avançado": 3}
+        return sum(nivel_map[n] * p for n, p in zip(niveis, pesos))
+    
+    def perfil_para_vetor(self, respostas):
+        vetor = [0] * len(self.cursos)
+        
+        niveis_map = {
+            1: "Iniciante",
+            2: "Intermediário",
+            3: "Avançado"
+        }
+        
+        areas_map = {
+            "programacao_nivel": "Programação",
+            "dados_nivel": "Ciência de Dados",
+            "design_nivel": "Design UX/UI",
+            "seguranca_nivel": "Cybersegurança",
+            "marketing_nivel": "Marketing Digital"
+        }
+        
+        for campo, area in areas_map.items():
+            nivel_valor = respostas.get(campo, 0)
+            if nivel_valor > 0 and nivel_valor <= 3:
+                nivel_nome = niveis_map[nivel_valor]
+                if area in areas_conhecimento and nivel_nome in areas_conhecimento[area]:
+                    for curso in areas_conhecimento[area][nivel_nome]:
+                        if curso in self.cursos_info:
+                            idx = self.cursos_info[curso]["index"]
+                            vetor[idx] = 1
+        
+        return vetor
+    
+    def recommend(self, vetor_usuario, top_n=5):
+        trilhas_matrix = np.array([t["cursos"] for t in self.trilhas.values()])
+        nomes = list(self.trilhas.keys())
+        
+        similaridades = cosine_similarity([vetor_usuario], trilhas_matrix)[0]
+        
+        recomendacoes = []
+        for i, nome in enumerate(nomes):
+            if similaridades[i] > 0:
+                recomendacoes.append({
+                    "trilha": nome,
+                    "similaridade": round(float(similaridades[i]) * 100, 2),
+                    "nivel_medio": self.trilhas[nome]["nivel_medio"],
+                    "areas": self.trilhas[nome]["areas"],
+                    "descricao": self.trilhas[nome]["descricao"],
+                    "duracao": self.trilhas[nome]["duracao"],
+                    "cursos_chave": self.trilhas[nome]["cursos_chave"]
+                })
+        
+        recomendacoes.sort(key=lambda x: x["similaridade"], reverse=True)
+        return recomendacoes[:top_n]
+    
+    def get_questionario_perguntas(self):
+        return {
+            "perguntas": [
+                {"id": "programacao_nivel", "area": "Programação", "icone": "💻", 
+                 "pergunta": "Qual seu nível de conhecimento em Programação?",
+                 "opcoes": [
+                     {"valor": 0, "label": "Não tenho conhecimento"},
+                     {"valor": 1, "label": "Iniciante (já vi lógica básica)"},
+                     {"valor": 2, "label": "Intermediário (já desenvolvi projetos)"},
+                     {"valor": 3, "label": "Avançado (trabalho/estudo há anos)"}
+                 ]},
+                {"id": "dados_nivel", "area": "Ciência de Dados", "icone": "📊",
+                 "pergunta": "Qual seu nível de conhecimento em Ciência de Dados?",
+                 "opcoes": [
+                     {"valor": 0, "label": "Não tenho conhecimento"},
+                     {"valor": 1, "label": "Iniciante (conheço conceitos básicos)"},
+                     {"valor": 2, "label": "Intermediário (já fiz análises)"},
+                     {"valor": 3, "label": "Avançado (uso ML/produção)"}
+                 ]},
+                {"id": "design_nivel", "area": "Design UX/UI", "icone": "🎨",
+                 "pergunta": "Qual seu nível de conhecimento em Design UX/UI?",
+                 "opcoes": [
+                     {"valor": 0, "label": "Não tenho conhecimento"},
+                     {"valor": 1, "label": "Iniciante (conheço ferramentas básicas)"},
+                     {"valor": 2, "label": "Intermediário (já criei protótipos)"},
+                     {"valor": 3, "label": "Avançado (trabalho com design)"}
+                 ]},
+                {"id": "seguranca_nivel", "area": "Cybersegurança", "icone": "🔒",
+                 "pergunta": "Qual seu nível de conhecimento em Cybersegurança?",
+                 "opcoes": [
+                     {"valor": 0, "label": "Não tenho conhecimento"},
+                     {"valor": 1, "label": "Iniciante (conheço conceitos)"},
+                     {"valor": 2, "label": "Intermediário (já fiz cursos)"},
+                     {"valor": 3, "label": "Avançado (trabalho na área)"}
+                 ]},
+                {"id": "marketing_nivel", "area": "Marketing Digital", "icone": "📈",
+                 "pergunta": "Qual seu nível de conhecimento em Marketing Digital?",
+                 "opcoes": [
+                     {"valor": 0, "label": "Não tenho conhecimento"},
+                     {"valor": 1, "label": "Iniciante (conheço redes sociais)"},
+                     {"valor": 2, "label": "Intermediário (já gerenciei campanhas)"},
+                     {"valor": 3, "label": "Avançado (trabalho com marketing)"}
+                 ]}
+            ]
+        }
+
+
+recommender = TrilhaRecommender()
+
+# =====================================================
+# ENDPOINTS DA API
+# =====================================================
+
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        "status": "ok",
+        "cursos_total": len(recommender.cursos),
+        "trilhas_total": len(recommender.trilhas)
+    })
+
+@app.route('/questionario/perguntas', methods=['GET'])
+def get_perguntas():
+    return jsonify(recommender.get_questionario_perguntas())
+
+@app.route('/questionario/recomendar', methods=['POST'])
+def recomendar():
+    try:
+        respostas = request.json
+        vetor_usuario = recommender.perfil_para_vetor(respostas)
+        recomendacoes = recommender.recommend(vetor_usuario)
+        
+        niveis = [v for k, v in respostas.items() if k.endswith('_nivel') and v > 0]
+        nivel_medio = sum(niveis) / len(niveis) if niveis else 1
+        
+        return jsonify({
+            "success": True,
+            "nivel_usuario": round(nivel_medio, 1),
+            "recomendacoes": recomendacoes
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("🎓 Sistema de Recomendação - Trilha Acadêmica")
+    print("=" * 50)
+    print(f"📚 Total de cursos: {len(recommender.cursos)}")
+    print(f"🎯 Total de trilhas: {len(recommender.trilhas)}")
+    print("=" * 50)
+    app.run(host="0.0.0.0", port=5000, debug=True)
+```
+
+---
+
+## 6. FRONTEND
+
+### 6.1 Configuração (`frontend/js/config.js`)
+
+```javascript
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+const API_URL = isProduction
+    ? 'https://seu-backend.vercel.app/api'
+    : 'http://localhost:3000/api';
+
+const PYTHON_URL = isProduction
+    ? 'https://seu-python.vercel.app'
+    : 'http://localhost:5000';
+```
+
+### 6.2 Autenticação (`frontend/js/auth.js`)
+
+```javascript
+const API_URL = 'http://localhost:3000/api';
+
+async function fazerLogin(email, password) {
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return { success: true };
+        }
+        return { success: false, error: data.error };
+    } catch (error) {
+        return { success: false, error: 'Erro de conexão' };
+    }
+}
+
+async function fazerCadastro(name, email, password) {
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            return { success: true };
+        }
+        return { success: false, error: data.error };
+    } catch (error) {
+        return { success: false, error: 'Erro de conexão' };
+    }
+}
+
+function sair() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+function isLogado() {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp > Date.now() / 1000;
+    } catch {
+        return false;
+    }
+}
+```
+
+### 6.3 Página de Login (`frontend/login.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card login-card">
+            <h1>🎓 Trilha Acadêmica</h1>
+            <h2>Login</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn-primary">Entrar</button>
+            </form>
+            
+            <div class="links">
+                <a href="cadastro.html">Não tem conta? Cadastre-se</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+            
+            const result = await fazerLogin(email, password);
+            
+            if (result.success) {
+                window.location.href = 'questionario.html';
+            } else {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = result.error || 'Email ou senha inválidos';
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+### 6.4 Página de Cadastro (`frontend/cadastro.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card login-card">
+            <h1>🎓 Trilha Acadêmica</h1>
+            <h2>Cadastro</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <form id="cadastroForm">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha (mínimo 6 caracteres)</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn-primary">Cadastrar</button>
+            </form>
+            
+            <div class="links">
+                <a href="login.html">Já tem conta? Faça login</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+            
+            if (password.length < 6) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'A senha deve ter pelo menos 6 caracteres';
+                return;
+            }
+            
+            const result = await fazerCadastro(name, email, password);
+            
+            if (result.success) {
+                messageDiv.className = 'message success';
+                messageDiv.textContent = 'Cadastro realizado! Redirecionando...';
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = result.error || 'Erro ao cadastrar';
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+### 6.5 Página do Questionário (`frontend/questionario.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .questionario-container {
+            max-width: 800px;
+            margin: 40px auto;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: #667eea;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .question-card {
+            display: none;
+        }
+        
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 25px 0;
+        }
+        
+        .option {
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option:hover, .option.selected {
+            border-color: #667eea;
+            background: #f5f3ff;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .recomendacao-card {
+            background: #f9fafb;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .recomendacao-card h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .similaridade {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="questionario-container">
+            <h1>🎓 Descubra sua Trilha Ideal</h1>
+            <p>Responda algumas perguntas e encontraremos o melhor caminho para você!</p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div id="loading" class="loading" style="display: none;">
+                <div>🔍 Analisando seu perfil...</div>
+            </div>
+            
+            <div id="questionarioContainer"></div>
+            <div id="results" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const PYTHON_URL = 'http://localhost:5000';
+        let perguntas = [];
+        let respostas = {};
+        let perguntaAtual = 0;
+        
+        // Verificar login
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+        
+        async function carregarPerguntas() {
+            try {
+                const response = await fetch(`${PYTHON_URL}/questionario/perguntas`);
+                const data = await response.json();
+                perguntas = data.perguntas;
+                renderizarPerguntas();
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('questionarioContainer').innerHTML = '<div class="card" style="display:block; text-align:center; color:red;">Erro ao carregar questionário</div>';
+            }
+        }
+        
+        function renderizarPerguntas() {
+            const container = document.getElementById('questionarioContainer');
+            container.innerHTML = perguntas.map((p, idx) => `
+                <div class="card question-card" data-pergunta="${idx}">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">${p.icone}</div>
+                    <div style="color: #666; text-transform: uppercase; letter-spacing: 2px;">${p.area}</div>
+                    <h2 style="margin: 15px 0;">${p.pergunta}</h2>
+                    <div class="options" data-id="${p.id}">
+                        ${p.opcoes.map(op => `
+                            <div class="option" data-valor="${op.valor}">
+                                ${op.label}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="nav-buttons">
+                        ${idx > 0 ? `<button class="btn-secondary" onclick="perguntaAnterior()">← Voltar</button>` : '<div></div>'}
+                        ${idx < perguntas.length - 1 ? 
+                            `<button class="btn-primary" onclick="proximaPergunta()">Próxima →</button>` : 
+                            `<button class="btn-primary" onclick="enviarRespostas()">Ver Resultado →</button>`}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Adicionar eventos
+            perguntas.forEach((_, idx) => {
+                const card = document.querySelector(`.question-card[data-pergunta="${idx}"]`);
+                if (card) {
+                    const options = card.querySelectorAll('.option');
+                    options.forEach(opt => {
+                        opt.addEventListener('click', () => {
+                            const valor = opt.dataset.valor;
+                            const perguntaId = perguntas[idx].id;
+                            respostas[perguntaId] = valor;
+                            options.forEach(o => o.classList.remove('selected'));
+                            opt.classList.add('selected');
+                        });
+                    });
+                }
+            });
+            
+            mostrarPergunta(0);
+        }
+        
+        function mostrarPergunta(idx) {
+            const cards = document.querySelectorAll('.question-card');
+            cards.forEach((card, i) => {
+                card.classList.toggle('active', i === idx);
+            });
+            
+            const progress = ((idx + 1) / perguntas.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            perguntaAtual = idx;
+        }
+        
+        function proximaPergunta() {
+            const perguntaId = perguntas[perguntaAtual].id;
+            if (!respostas[perguntaId]) {
+                alert('Por favor, selecione uma opção antes de continuar.');
+                return;
+            }
+            if (perguntaAtual < perguntas.length - 1) {
+                mostrarPergunta(perguntaAtual + 1);
+            }
+        }
+        
+        function perguntaAnterior() {
+            if (perguntaAtual > 0) {
+                mostrarPergunta(perguntaAtual - 1);
+            }
+        }
+        
+        async function enviarRespostas() {
+            const ultimaId = perguntas[perguntas.length - 1].id;
+            if (!respostas[ultimaId]) {
+                alert('Por favor, responda todas as perguntas.');
+                return;
+            }
+            
+            document.getElementById('questionarioContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch(`${PYTHON_URL}/questionario/recomendar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(respostas)
+                });
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success) {
+                    exibirResultados(data);
+                } else {
+                    alert('Erro ao gerar recomendações');
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('Erro de conexão com o servidor');
+            }
+        }
+        
+        function exibirResultados(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            let nivelTexto = '';
+            if (data.nivel_usuario < 1.5) nivelTexto = 'Iniciante';
+            else if (data.nivel_usuario < 2.5) nivelTexto = 'Intermediário';
+            else nivelTexto = 'Avançado';
+            
+            resultsDiv.innerHTML = `
+                <div class="card">
+                    <h2>🎉 Suas Recomendações</h2>
+                    <div style="background: #ede9fe; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                        <strong>📊 Seu nível:</strong> ${nivelTexto} (${data.nivel_usuario}/3)
+                    </div>
+                    ${data.recomendacoes.map(rec => `
+                        <div class="recomendacao-card">
+                            <h3>${rec.trilha}</h3>
+                            <div style="display: flex; gap: 15px; margin: 10px 0; font-size: 0.85rem; color: #666;">
+                                <span>📚 ${rec.duracao}</span>
+                                <span>🎯 Nível ${rec.nivel_medio < 1.5 ? 'Iniciante' : rec.nivel_medio < 2.5 ? 'Intermediário' : 'Avançado'}</span>
+                            </div>
+                            <p>${rec.descricao}</p>
+                            <div style="margin-top: 10px;">
+                                <span class="similaridade">${rec.similaridade}% compatível</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="btn-primary" onclick="reiniciar()">↻ Refazer Questionário</button>
+                        <button class="btn-secondary" onclick="window.location.href='dashboard.html'">📊 Dashboard</button>
+                    </div>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+        
+        function reiniciar() {
+            respostas = {};
+            perguntaAtual = 0;
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('questionarioContainer').style.display = 'block';
+            document.getElementById('progressFill').style.width = '0%';
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            mostrarPergunta(0);
+        }
+        
+        carregarPerguntas();
+    </script>
+</body>
+</html>
+```
+
+### 6.6 CSS Global (`frontend/css/style.css`)
+
+```css
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.login-card {
+    max-width: 450px;
+    margin: 100px auto;
+}
+
+h1 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn-primary, .btn-secondary {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+.links {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.links a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.message {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.message.success {
+    background: #d1fae5;
+    color: #065f46;
+    display: block;
+}
+
+.message.error {
+    background: #fee2e2;
+    color: #dc2626;
+    display: block;
+}
+```
+
+---
+
+## 7. VARIÁVEIS DE AMBIENTE
+
+### 7.1 Arquivo `.env`
+
+```env
+PORT=3000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=admin123
+DB_NAME=trilha_academica
+JWT_SECRET=trilha_secret_key_2024
+PYTHON_API_URL=http://localhost:5000
+```
+
+---
+
+## 8. INSTALAÇÃO E EXECUÇÃO
+
+### 8.1 Pré-requisitos
+
+| Software | Versão | Comando para verificar |
+|----------|--------|------------------------|
+| Node.js | 18.x | `node --version` |
+| MySQL | 8.0 | `mysql --version` |
+| Python | 3.9+ | `python --version` |
+
+### 8.2 Passo a Passo
+
+```bash
+# 1. Clonar o repositório
+git clone https://github.com/seu-usuario/trilha-academica.git
+cd trilha-academica
+
+# 2. Instalar dependências Node.js
+npm install
+
+# 3. Instalar dependências Python
+cd python-recomendacao
+pip install -r requirements.txt
+cd ..
+
+# 4. Configurar banco de dados
+mysql -u root -p < database.sql
+
+# 5. Configurar .env com suas credenciais
+
+# 6. Iniciar servidor Python (Terminal 1)
+cd python-recomendacao
+python app.py
+
+# 7. Iniciar servidor Node.js (Terminal 2)
+node server.js
+
+# 8. Acessar no navegador
+http://localhost:3000/login.html
+```
+
+### 8.3 Credenciais de Teste
+
+| Email | Senha |
+|-------|-------|
+| admin@trilha.com | admin123 |
+
+---
+
+## 9. ENDPOINTS DA API
+
+### 9.1 Autenticação
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/auth/register` | Cadastrar usuário |
+| POST | `/api/auth/login` | Fazer login |
+
+### 9.2 Recomendação
+
+| Método | Endpoint | Descrição | Autenticação |
+|--------|----------|-----------|--------------|
+| GET | `/api/recomendacao/perguntas` | Buscar perguntas | ❌ |
+| POST | `/api/recomendacao/respostas` | Salvar respostas | ✅ |
+| GET | `/api/recomendacao/recomendacoes` | Obter recomendações | ✅ |
+| POST | `/api/recomendacao/salvar` | Salvar trilha favorita | ✅ |
+
+### 9.3 Servidor Python
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/health` | Status do serviço |
+| GET | `/questionario/perguntas` | Perguntas do questionário |
+| POST | `/questionario/recomendar` | Gerar recomendações |
+
+---
+
+## 10. ESTRUTURA DE RESPOSTA DA API
+
+### 10.1 Login (200 OK)
+
+```json
+{
+    "success": true,
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+        "id": 1,
+        "name": "Administrador",
+        "email": "admin@trilha.com"
+    }
+}
+```
+
+### 10.2 Recomendações (200 OK)
+
+```json
+{
+    "success": true,
+    "nivel_usuario": 1.8,
+    "recomendacoes": [
+        {
+            "trilha": "Frontend Developer",
+            "similaridade": 65.2,
+            "nivel_medio": 1.6,
+            "areas": ["Programação", "Design UX/UI"],
+            "descricao": "Crie interfaces web modernas e responsivas",
+            "duracao": "5 meses",
+            "cursos_chave": ["HTML5 e CSS3", "React.js", "UX/UI Fundamentals"]
+        }
+    ]
+}
+```
+
+---
+
+## 11. PRÓXIMOS PASSOS E MELHORIAS
+
+### 11.1 Funcionalidades Planejadas
+
+| Funcionalidade | Prioridade | Descrição |
+|----------------|------------|-----------|
+| Dashboard com progresso | Alta | Gráficos de evolução do usuário |
+| Certificados | Média | Gerar certificados ao concluir trilhas |
+| Comunidade | Baixa | Fórum para usuários compartilharem experiências |
+
+### 11.2 Melhorias no Algoritmo
+
+| Melhoria | Descrição |
+|----------|-----------|
+| Peso por área | Dar mais importância para cursos da área principal |
+| Aprendizado contínuo | Ajustar recomendações baseado no feedback |
+| Filtro colaborativo | Usar dados de usuários similares |
+
+---
+
+## 12. CHECKLIST DE IMPLANTAÇÃO
+
+- [ ] Node.js instalado
+- [ ] MySQL instalado e rodando
+- [ ] Python instalado
+- [ ] Dependências Node instaladas (`npm install`)
+- [ ] Dependências Python instaladas (`pip install -r requirements.txt`)
+- [ ] Banco de dados criado (`database.sql`)
+- [ ] Arquivo `.env` configurado
+- [ ] Servidor Python rodando (porta 5000)
+- [ ] Servidor Node rodando (porta 3000)
+- [ ] Frontend acessível (`http://localhost:3000`)
+- [ ] Login funcionando
+- [ ] Cadastro funcionando
+- [ ] Questionário carregando
+- [ ] Recomendações sendo geradas
+
+---
+
+## 13. RESOLUÇÃO DE PROBLEMAS
+
+| Problema | Solução |
+|----------|---------|
+| `Cannot find module` | Execute `npm install` |
+| `ECONNREFUSED 5000` | Servidor Python não está rodando |
+| `ER_ACCESS_DENIED_ERROR` | Verifique senha do MySQL no `.env` |
+| `Token inválido` | Faça login novamente |
+| `CORS error` | Verifique se o servidor Python tem CORS habilitado |
+
+---
+
+**Documento Versão:** 2.0  
+**Última Atualização:** 13/04/2026  
+**Status:** Produção  
+
+---

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro - Trilha Acadêmica</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/cadastro.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Criar Conta</h2>
+
+        <div id="successMessage" class="success"></div>
+
+        <form id="formCadastro">
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" id="nome" placeholder="Seu nome">
+                <div class="error" id="erroNome">Digite seu nome</div>
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="email@exemplo.com">
+                <div class="error" id="erroEmail">Email inválido</div>
+            </div>
+
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="senha" placeholder="********">
+                <div class="error" id="erroSenha">Mínimo 6 caracteres</div>
+            </div>
+
+            <button type="submit" class="btn" id="btnCadastrar">Cadastrar</button>
+        </form>
+
+        <div class="footer">
+            Já tem conta? <a href="login.html">Entrar</a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/auth';
+
+        const form = document.getElementById('formCadastro');
+        const btnCadastrar = document.getElementById('btnCadastrar');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            let valid = true;
+
+            const nome = document.getElementById('nome');
+            const email = document.getElementById('email');
+            const senha = document.getElementById('senha');
+
+            const erroNome = document.getElementById('erroNome');
+            const erroEmail = document.getElementById('erroEmail');
+            const erroSenha = document.getElementById('erroSenha');
+
+            erroNome.style.display = 'none';
+            erroEmail.style.display = 'none';
+            erroSenha.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            if (nome.value.trim() === '') {
+                erroNome.style.display = 'block';
+                valid = false;
+            }
+
+            if (!email.value.includes('@') || !email.value.includes('.')) {
+                erroEmail.style.display = 'block';
+                valid = false;
+            }
+
+            if (senha.value.length < 6) {
+                erroSenha.style.display = 'block';
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            btnCadastrar.disabled = true;
+            btnCadastrar.innerHTML = '<span class="loading"></span> Cadastrando...';
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nome.value.trim(),
+                        email: email.value.trim(),
+                        password: senha.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    successMessage.style.display = 'block';
+                    successMessage.innerHTML = '✓ Cadastro realizado com sucesso! Redirecionando...';
+                    form.reset();
+                    
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error';
+                    errorDiv.style.display = 'block';
+                    errorDiv.style.backgroundColor = '#fee2e2';
+                    errorDiv.style.padding = '10px';
+                    errorDiv.style.borderRadius = '8px';
+                    errorDiv.style.marginBottom = '15px';
+                    errorDiv.innerHTML = data.error || 'Erro ao cadastrar';
+                    form.insertBefore(errorDiv, form.firstChild);
+                    setTimeout(() => errorDiv.remove(), 3000);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.style.display = 'block';
+                errorDiv.style.backgroundColor = '#fee2e2';
+                errorDiv.style.padding = '10px';
+                errorDiv.style.borderRadius = '8px';
+                errorDiv.style.marginBottom = '15px';
+                errorDiv.innerHTML = 'Erro de conexão com o servidor';
+                form.insertBefore(errorDiv, form.firstChild);
+                setTimeout(() => errorDiv.remove(), 3000);
+            } finally {
+                btnCadastrar.disabled = false;
+                btnCadastrar.innerHTML = 'Cadastrar';
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Email - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/verificar-email.css">
+</head>
+<body>
+    <div class="container-verificacao">
+        <div class="cabecalho-verificacao">
+            <div class="icone-verificacao">📧</div>
+            <h1>Verificação de Email</h1>
+            <p>Digite o código de 6 dígitos enviado para seu email.</p>
+        </div>
+        
+        <div id="message" class="mensagem"></div>
+        
+        <form id="verificarForm" class="formulario-verificacao">
+            <div class="grupo-formulario codigo-verificacao">
+                <label for="codigo">Código de Verificação:</label>
+                <input type="text" id="codigo" maxlength="6" required placeholder="000000">
+            </div>
+            <button type="submit" class="botao-primario">Verificar</button>
+            <button type="button" id="reenviarBtn" class="botao-secundario">Reenviar Código</button>
+        </form>
+        
+        <div class="links">
+            <a href="login.html">Voltar para Login</a>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('verificarForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const codigo = document.getElementById('codigo').value;
+            
+            // Assuming a function verificarEmail exists
+            const result = await verificarEmail(codigo);
+            
+            const messageDiv = document.getElementById('message');
+            if (result.success) {
+                messageDiv.className = 'mensagem sucesso';
+                messageDiv.textContent = result.message;
+                // Redirect or something
+                setTimeout(() => window.location.href = 'dashboard.html', 2000);
+            } else {
+                messageDiv.className = 'mensagem erro';
+                messageDiv.textContent = result.error;
+            }
+        });
+
+        document.getElementById('reenviarBtn').addEventListener('click', async () => {
+            const result = await reenviarCodigo();
+            const messageDiv = document.getElementById('message');
+            if (result.success) {
+                messageDiv.className = 'mensagem sucesso';
+                messageDiv.textContent = 'Código reenviado!';
+            } else {
+                messageDiv.className = 'mensagem erro';
+                messageDiv.textContent = result.error;
+            }
+        });
+    </script>
+</body>
+</html>

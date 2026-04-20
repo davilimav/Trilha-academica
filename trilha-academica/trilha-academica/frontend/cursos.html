@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursos - Trilha Acadêmica</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        
+        .header { background: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 24px; font-weight: bold; color: #667eea; }
+        .nav a { color: #333; text-decoration: none; margin-left: 20px; }
+        .btn-sair { background: #667eea; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+        
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        .nivel-usuario { background: white; border-radius: 16px; padding: 20px; margin-bottom: 30px; text-align: center; }
+        .nivel-badge { display: inline-block; padding: 8px 24px; border-radius: 30px; font-weight: bold; }
+        .nivel-iniciante { background: #e0f2fe; color: #0369a1; }
+        .nivel-intermediario { background: #fef3c7; color: #b45309; }
+        .nivel-avancado { background: #dcfce7; color: #15803d; }
+        
+        .area-card { background: white; border-radius: 20px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .area-header { background: #667eea; color: white; padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .area-header:hover { background: #5a67d8; }
+        .area-header h2 { display: flex; align-items: center; gap: 10px; }
+        .subareas-container { padding: 20px; display: none; background: #f9fafb; }
+        .subarea-card { background: white; border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
+        .subarea-header { background: #e0e7ff; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .subarea-header h3 { display: flex; align-items: center; gap: 10px; color: #4338ca; }
+        .cursos-container { padding: 15px; display: none; background: #f3f4f6; }
+        .nivel-group { margin-bottom: 20px; }
+        .nivel-group h4 { color: #374151; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #667eea; display: inline-block; }
+        .curso-item { background: white; border-radius: 10px; padding: 12px 15px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .curso-item:hover { transform: translateX(5px); background: #ede9fe; }
+        .curso-nivel { font-size: 12px; padding: 2px 8px; border-radius: 20px; }
+        .nivel-ini { background: #e0f2fe; color: #0369a1; }
+        .nivel-int { background: #fef3c7; color: #b45309; }
+        .nivel-ava { background: #dcfce7; color: #15803d; }
+        
+        .loading { text-align: center; padding: 40px; color: white; }
+        .back-link { display: inline-block; margin-top: 20px; color: white; text-decoration: none; }
+        
+        .toggle-icon { font-size: 20px; transition: transform 0.3s; }
+        .rotated { transform: rotate(180deg); }
+        
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 10px; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎓 Trilha Acadêmica</div>
+        <nav class="nav">
+            <a href="dashboard-real.html">Dashboard</a>
+            <a href="cursos.html">Cursos</a>
+            <a href="questionario.html">Questionário</a>
+        </nav>
+        <button class="btn-sair" onclick="sair()">Sair</button>
+    </header>
+
+    <div class="container">
+        <div id="nivelContainer" class="nivel-usuario"></div>
+        <div id="areasContainer" class="loading">Carregando áreas de conhecimento...</div>
+        <a href="dashboard-real.html" class="back-link">← Voltar para Dashboard</a>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) { window.location.href = 'login.html'; }
+
+        async function carregarNivelUsuario() {
+            try {
+                const response = await fetch(`${API_URL}/recomendacao/recomendacoes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.success && data.nivel_usuario) {
+                    let nivelTexto = '';
+                    let nivelClass = '';
+                    if (data.nivel_usuario < 1.5) { nivelTexto = 'Iniciante'; nivelClass = 'nivel-iniciante'; }
+                    else if (data.nivel_usuario < 2.5) { nivelTexto = 'Intermediário'; nivelClass = 'nivel-intermediario'; }
+                    else { nivelTexto = 'Avançado'; nivelClass = 'nivel-avancado'; }
+                    
+                    document.getElementById('nivelContainer').innerHTML = `
+                        <h3>🎯 Seu Nível de Conhecimento</h3>
+                        <span class="nivel-badge ${nivelClass}">${nivelTexto}</span>
+                        <p style="margin-top: 10px; color: #666;">Cursos recomendados baseados no seu nível: <strong>${nivelTexto}</strong></p>
+                    `;
+                }
+            } catch (error) { console.error('Erro:', error); }
+        }
+
+        async function carregarAreas() {
+            try {
+                const response = await fetch(`${API_URL}/cursos/areas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const areas = await response.json();
+                
+                const container = document.getElementById('areasContainer');
+                container.innerHTML = areas.map(area => `
+                    <div class="area-card">
+                        <div class="area-header" onclick="toggleArea(this)">
+                            <h2><span>${area.icone || '📚'}</span> ${area.nome}</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="subareas-container" data-area="${encodeURIComponent(area.nome)}">
+                            <div class="loading">Carregando subáreas...</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Carregar subáreas de cada área
+                for (const area of areas) {
+                    carregarSubareas(area.nome);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('areasContainer').innerHTML = '<div style="text-align:center; color:red;">Erro ao carregar áreas</div>';
+            }
+        }
+
+        async function carregarSubareas(areaNome) {
+            try {
+                const response = await fetch(`${API_URL}/cursos/areas/${encodeURIComponent(areaNome)}/subareas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const subareas = await response.json();
+                
+                const container = document.querySelector(`.subareas-container[data-area="${encodeURIComponent(areaNome)}"]`);
+                container.innerHTML = subareas.map(sub => `
+                    <div class="subarea-card">
+                        <div class="subarea-header" onclick="toggleSubarea(this)">
+                            <h3><span>${sub.icone || '📁'}</span> ${sub.nome}</h3>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="cursos-container" data-area="${encodeURIComponent(areaNome)}" data-subarea="${encodeURIComponent(sub.nome)}">
+                            <div class="loading">Carregando cursos...</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Carregar cursos de cada subárea
+                for (const sub of subareas) {
+                    carregarCursos(areaNome, sub.nome);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function carregarCursos(areaNome, subareaNome) {
+            try {
+                const response = await fetch(`${API_URL}/cursos/areas/${encodeURIComponent(areaNome)}/subareas/${encodeURIComponent(subareaNome)}/cursos`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const cursosPorNivel = await response.json();
+                
+                const container = document.querySelector(`.cursos-container[data-area="${encodeURIComponent(areaNome)}"][data-subarea="${encodeURIComponent(subareaNome)}"]`);
+                
+                let html = '';
+                for (const [nivel, cursos] of Object.entries(cursosPorNivel)) {
+                    let nivelClass = nivel === 'Iniciante' ? 'nivel-ini' : (nivel === 'Intermediário' ? 'nivel-int' : 'nivel-ava');
+                    html += `
+                        <div class="nivel-group">
+                            <h4>${nivel}</h4>
+                            ${cursos.map(curso => `
+                                <div class="curso-item" onclick="verDetalhesCurso('${encodeURIComponent(areaNome)}', '${encodeURIComponent(subareaNome)}', '${nivel}', '${encodeURIComponent(curso)}')">
+                                    <span>📖 ${curso}</span>
+                                    <span class="curso-nivel ${nivelClass}">${nivel}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        function toggleArea(element) {
+            const subareasContainer = element.parentElement.querySelector('.subareas-container');
+            const icon = element.querySelector('.toggle-icon');
+            if (subareasContainer.style.display === 'none' || !subareasContainer.style.display) {
+                subareasContainer.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                subareasContainer.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function toggleSubarea(element) {
+            const cursosContainer = element.parentElement.querySelector('.cursos-container');
+            const icon = element.querySelector('.toggle-icon');
+            if (cursosContainer.style.display === 'none' || !cursosContainer.style.display) {
+                cursosContainer.style.display = 'block';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                cursosContainer.style.display = 'none';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function verDetalhesCurso(area, subarea, nivel, curso) {
+            window.location.href = `curso-detalhe.html?area=${area}&subarea=${subarea}&nivel=${nivel}&curso=${curso}`;
+        }
+
+        function sair() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        carregarNivelUsuario();
+        carregarAreas();
+    </script>
+</body>
+</html>

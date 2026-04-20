@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Administrativo - Trilha Acadêmica</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #f3f4f6; }
+
+.header { background: #1D2671; padding: 15px 30px; color: white; display: flex; justify-content: space-between; }
+.btn-sair { background: #dc2626; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
+
+.container { max-width: 1400px; margin: 30px auto; padding: 0 20px; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stat-card { background: white; border-radius: 16px; padding: 25px; text-align: center; }
+
+.charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top:20px; }
+.chart-card { background: white; border-radius: 16px; padding: 20px; }
+
+canvas { max-height: 300px; width: 100%; }
+</style>
+</head>
+
+<body>
+
+<div id="adminPanel">
+    <div class="header">
+        <div>🎓 Trilha Acadêmica - Admin</div>
+    </div>
+
+    <div class="container">
+
+        <div class="stats-grid">
+            <div class="stat-card"><h3 id="totalUsuarios">-</h3><p>Usuários</p></div>
+            <div class="stat-card"><h3 id="totalQuestionarios">-</h3><p>Questionários</p></div>
+            <div class="stat-card"><h3 id="totalEspecializacoes">-</h3><p>Especializações</p></div>
+            <div class="stat-card"><h3 id="usuariosAtivos">-</h3><p>Ativos</p></div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Top Especializações</h3>
+                <canvas id="topEspecChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Nível Médio</h3>
+                <canvas id="nivelMedioChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const API_URL = 'http://localhost:3000/api';
+
+// 👉 COLOCA UM TOKEN VÁLIDO AQUI (se backend exigir)
+let token = '';
+
+let topEspecChart, nivelMedioChart;
+
+window.onload = () => {
+    carregarDadosAdmin();
+};
+
+async function carregarDadosAdmin() {
+    await carregarStats();
+    await carregarTopEspecializacoes();
+    await carregarNivelMedio();
+}
+
+async function carregarStats() {
+    try {
+        const response = await fetch(`${API_URL}/admin/dashboard/stats`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        document.getElementById('totalUsuarios').textContent = data.total_usuarios || 0;
+        document.getElementById('totalQuestionarios').textContent = data.total_questionarios || 0;
+        document.getElementById('totalEspecializacoes').textContent = data.total_especializacoes || 0;
+        document.getElementById('usuariosAtivos').textContent = data.usuarios_ativos_30d || 0;
+
+    } catch (error) {
+        console.error('Erro stats:', error);
+    }
+}
+
+async function carregarTopEspecializacoes() {
+    try {
+        const response = await fetch(`${API_URL}/admin/dashboard/top-especializacoes`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        if (topEspecChart) topEspecChart.destroy();
+
+        const ctx = document.getElementById('topEspecChart').getContext('2d');
+        topEspecChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.especializacao),
+                datasets: [{
+                    label: 'Total',
+                    data: data.map(d => d.total)
+                }]
+            }
+        });
+
+    } catch (error) {
+        console.error('Erro gráfico:', error);
+    }
+}
+
+async function carregarNivelMedio() {
+    try {
+        const response = await fetch(`${API_URL}/admin/dashboard/niveis-medios`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+
+        if (nivelMedioChart) nivelMedioChart.destroy();
+
+        const ctx = document.getElementById('nivelMedioChart').getContext('2d');
+        nivelMedioChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Programação', 'Dados', 'Design', 'Segurança', 'Marketing'],
+                datasets: [{
+                    label: 'Nível',
+                    data: [
+                        data.programacao,
+                        data.dados,
+                        data.design,
+                        data.seguranca,
+                        data.marketing
+                    ]
+                }]
+            }
+        });
+
+    } catch (error) {
+        console.error('Erro radar:', error);
+    }
+}
+</script>
+
+</body>
+</html>

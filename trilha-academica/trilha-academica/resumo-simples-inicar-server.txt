@@ -1,0 +1,86 @@
+# 🚀 Tutorial Rápido - Iniciar o Sistema Trilha Acadêmica
+
+## Pré-requisitos (uma única vez)
+
+Antes de iniciar, certifique-se de ter instalado:
+
+```bash
+# Node.js
+npm install
+
+# Python
+cd python-recomendacao
+pip install -r requirements.txt
+cd ..
+```
+
+---
+
+## 📋 Iniciar o Sistema (todos os dias)
+
+Você precisa de **DOIS terminais abertos**:
+
+### Terminal 1 - Servidor Python (Recomendação)
+
+```bash
+cd C:\Users\Caio\Desktop\SITES\trilha-academica
+cd python-recomendacao
+python app.py
+```
+
+**Aguarde até ver:**
+```
+🚀 Servidor rodando em http://localhost:5000
+```
+
+### Terminal 2 - Servidor Node.js (API e Frontend)
+
+```bash
+cd C:\Users\Caio\Desktop\SITES\trilha-academica
+node server.js
+```
+
+**Aguarde até ver:**
+```
+🚀 Servidor rodando em http://localhost:3000
+✅ Banco de dados conectado!
+```
+
+---
+
+## 🔑 Acessar o Sistema
+
+Abra o navegador e acesse:
+
+```
+http://localhost:3000/login.html
+```
+
+**Credenciais de teste:**
+| Email | Senha |
+|-------|-------|
+| `teste@email.com` | `123456` |
+| `admin@trilha.com` | `admin123` |
+
+---
+
+## 📋 Fluxo do Usuário
+
+1. **Login** → entra com email/senha
+2. **Questionário** → responde 5 perguntas
+3. **Resultado** → clica em "Ver Resultado"
+4. **Recomendações** → vê trilhas sugeridas
+5. **Dashboard** → clica em "Ir para Dashboard"
+
+---
+
+## ⚠️ Comandos úteis
+
+| Problema | Solução |
+|----------|---------|
+| Servidor não inicia | Verifique se a porta está livre: `netstat -ano | findstr :3000` |
+| Erro de conexão | O servidor Python precisa estar rodando (porta 5000) |
+| Esqueceu a senha | Use `admin@trilha.com` / `admin123` |
+
+---
+

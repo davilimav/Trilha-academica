@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário - Trilha Acadêmica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #4CAF50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .card.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+
+        .question-area {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f5f3ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #ede9fe;
+        }
+
+        .option-radio {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            position: relative;
+        }
+
+        .option.selected .option-radio {
+            border-color: #667eea;
+        }
+
+        .option.selected .option-radio::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+
+        .option-label {
+            flex: 1;
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .cursos-container {
+            margin-top: 25px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            display: none;
+        }
+
+        .cursos-titulo {
+            font-size: 1rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cursos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .curso-item {
+            padding: 10px 12px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .curso-item:hover {
+            background: #ede9fe;
+        }
+
+        .curso-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .curso-item .check {
+            opacity: 0;
+            font-weight: bold;
+        }
+
+        .curso-item.selected .check {
+            opacity: 1;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .results {
+            background: white;
+            border-radius: 24px;
+            padding: 35px;
+            display: none;
+            margin-top: 20px;
+        }
+
+        .results h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .recomendacao-card {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .recomendacao-card h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .recomendacao-meta {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .similaridade {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+            .question-text {
+                font-size: 1.1rem;
+            }
+            .option {
+                padding: 12px;
+            }
+            .cursos-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Escolha sua Trilha Acadêmica</h1>
+            <p>Selecione as áreas de interesse e os cursos que você quer fazer</p>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div id="loading" class="loading" style="display: none;">
+            <div>🔍 Salvando suas preferências...</div>
+        </div>
+        <div id="questionarioContainer"></div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        const NODE_API = 'http://localhost:3000/api';
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // =====================================================
+        // ÁREAS E CURSOS
+        // =====================================================
+        const areas = [
+            {
+                id: "ti",
+                nome: "Tecnologia da Informação (TI)",
+                icone: "💻",
+                cursos: [
+                    "Desenvolvimento Web",
+                    "Desenvolvimento Mobile",
+                    "Banco de Dados",
+                    "Redes de Computadores",
+                    "Segurança da Informação",
+                    "Cloud Computing",
+                    "DevOps",
+                    "Inteligência Artificial",
+                    "Ciência de Dados",
+                    "UX/UI Design"
+                ]
+            },
+            {
+                id: "ciencias",
+                nome: "Ciências",
+                icone: "🔬",
+                cursos: [
+                    "Biologia",
+                    "Química",
+                    "Física",
+                    "Matemática Aplicada",
+                    "Estatística",
+                    "Geologia",
+                    "Astronomia",
+                    "Oceanografia",
+                    "Genética",
+                    "Neurociência"
+                ]
+            },
+            {
+                id: "matematica",
+                nome: "Matemática",
+                icone: "📐",
+                cursos: [
+                    "Álgebra",
+                    "Geometria",
+                    "Cálculo",
+                    "Trigonometria",
+                    "Probabilidade",
+                    "Matemática Financeira",
+                    "Matemática Discreta",
+                    "Teoria dos Números",
+                    "Equações Diferenciais",
+                    "Matemática Aplicada"
+                ]
+            }
+        ];
+
+        let respostas = {};
+        let cursosSelecionados = {};
+        let areaAtual = 0;
+
+        // Inicializar
+        areas.forEach(area => {
+            respostas[area.id] = 0;
+            cursosSelecionados[area.id] = [];
+        });
+
+        function renderizarPerguntas() {
+            const container = document.getElementById('questionarioContainer');
+            container.innerHTML = areas.map((area, idx) => `
+                <div class="card" data-pergunta="${idx}">
+                    <div class="question-icon">${area.icone}</div>
+                    <div class="question-area">ÁREA ${idx + 1} DE ${areas.length}</div>
+                    <div class="question-text">Você tem interesse na área de ${area.nome}?</div>
+                    <div class="options" data-id="${area.id}">
+                        <div class="option" data-valor="1">
+                            <div class="option-radio"></div>
+                            <div class="option-label">✅ Sim, tenho interesse</div>
+                        </div>
+                        <div class="option" data-valor="0">
+                            <div class="option-radio"></div>
+                            <div class="option-label">❌ Não tenho interesse</div>
+                        </div>
+                    </div>
+                    <div class="cursos-container" id="cursos-${area.id}">
+                        <div class="cursos-titulo">
+                            📚 Quais cursos te interessam em ${area.nome}?
+                        </div>
+                        <div class="cursos-grid" id="grid-${area.id}"></div>
+                    </div>
+                    <div class="nav-buttons">
+                        ${idx > 0 ? `<button class="btn btn-secondary" onclick="perguntaAnterior()">← Voltar</button>` : '<div></div>'}
+                        ${idx < areas.length - 1 ? 
+                            `<button class="btn btn-primary" onclick="proximaPergunta()">Próxima →</button>` : 
+                            `<button class="btn btn-primary" onclick="enviarRespostas()">Concluir →</button>`}
+                    </div>
+                </div>
+            `).join('');
+
+            // Adicionar eventos para as opções Sim/Não
+            areas.forEach((area, idx) => {
+                const card = document.querySelector(`.card[data-pergunta="${idx}"]`);
+                if (card) {
+                    const options = card.querySelectorAll('.option');
+                    options.forEach(opt => {
+                        opt.addEventListener('click', () => {
+                            const valor = parseInt(opt.dataset.valor);
+                            const areaId = area.id;
+                            respostas[areaId] = valor;
+                            
+                            const cursosContainer = document.getElementById(`cursos-${areaId}`);
+                            if (valor === 1) {
+                                cursosContainer.style.display = 'block';
+                                carregarCursos(area);
+                            } else {
+                                cursosContainer.style.display = 'none';
+                                cursosSelecionados[areaId] = [];
+                            }
+                            
+                            options.forEach(o => o.classList.remove('selected'));
+                            opt.classList.add('selected');
+                        });
+                    });
+                }
+            });
+            
+            mostrarPergunta(0);
+        }
+
+        function carregarCursos(area) {
+            const grid = document.getElementById(`grid-${area.id}`);
+            if (!grid) return;
+            
+            const selecionados = cursosSelecionados[area.id] || [];
+            
+            grid.innerHTML = area.cursos.map(curso => `
+                <div class="curso-item ${selecionados.includes(curso) ? 'selected' : ''}" data-curso="${curso}">
+                    <span>📖 ${curso}</span>
+                    <span class="check">✓</span>
+                </div>
+            `).join('');
+            
+            // Adicionar eventos aos cursos
+            const cursoItems = grid.querySelectorAll('.curso-item');
+            cursoItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const curso = item.dataset.curso;
+                    const selecionadosAtuais = cursosSelecionados[area.id] || [];
+                    const index = selecionadosAtuais.indexOf(curso);
+                    
+                    if (index === -1) {
+                        selecionadosAtuais.push(curso);
+                        item.classList.add('selected');
+                    } else {
+                        selecionadosAtuais.splice(index, 1);
+                        item.classList.remove('selected');
+                    }
+                    cursosSelecionados[area.id] = selecionadosAtuais;
+                    
+                    console.log(`📌 ${area.nome}: ${cursosSelecionados[area.id].length} cursos selecionados`);
+                });
+            });
+        }
+
+        function mostrarPergunta(idx) {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, i) => {
+                if (i === idx) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+            
+            const progress = ((idx + 1) / areas.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            areaAtual = idx;
+        }
+
+        function proximaPergunta() {
+            const areaId = areas[areaAtual].id;
+            if (respostas[areaId] === undefined) {
+                alert('Por favor, selecione uma opção antes de continuar.');
+                return;
+            }
+            if (areaAtual < areas.length - 1) {
+                mostrarPergunta(areaAtual + 1);
+            }
+        }
+
+        function perguntaAnterior() {
+            if (areaAtual > 0) {
+                mostrarPergunta(areaAtual - 1);
+            }
+        }
+
+        async function enviarRespostas() {
+            const ultimaArea = areas[areas.length - 1].id;
+            if (respostas[ultimaArea] === undefined) {
+                alert('Por favor, responda todas as perguntas.');
+                return;
+            }
+
+            document.getElementById('questionarioContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            // Montar objeto com áreas de interesse e cursos selecionados
+            const areasInteresse = [];
+            for (const area of areas) {
+                if (respostas[area.id] === 1) {
+                    areasInteresse.push({
+                        area: area.nome,
+                        cursos: cursosSelecionados[area.id]
+                    });
+                }
+            }
+
+            console.log('📤 Áreas e cursos selecionados:', areasInteresse);
+
+            try {
+                // Salvar respostas no backend
+                const saveResponse = await fetch(`${NODE_API}/recomendacao/respostas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ areas_interesse: areasInteresse })
+                });
+                
+                const saveData = await saveResponse.json();
+                console.log('📥 Resposta do save:', saveData);
+                
+                // Marcar questionário como respondido
+                await fetch(`${NODE_API}/auth/marcar-questionario`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                // Redirecionar para o dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                document.getElementById('loading').style.display = 'none';
+                alert('Erro ao salvar. Tente novamente.');
+            }
+        }
+
+        // Iniciar
+        renderizarPerguntas();
+    </script>
+</body>
+</html>

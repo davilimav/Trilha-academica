@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Trilha Acadêmica</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f3f4f6; }
+        
+        .header { background: #16a34a; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; color: white; flex-wrap: wrap; }
+        .logo { font-size: 24px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .logo img { height: 50px; }
+        nav { display: flex; gap: 30px; }
+        nav a { color: white; text-decoration: none; font-weight: 500; }
+        .btn { background: white; color: #16a34a; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #f0fdf4; transform: scale(1.02); }
+        
+        .container { display: flex; max-width: 1400px; margin: 30px auto; gap: 30px; padding: 0 20px; }
+        
+        .sidebar { background: white; border-radius: 20px; padding: 25px; width: 280px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
+        .profile { text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px; }
+        .profile .pro { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 3px solid #16a34a; cursor: pointer; }
+        .profile .pro:hover { opacity: 0.8; }
+        .profile h3 { color: #1f2937; margin-bottom: 5px; }
+        .profile p { color: #6b7280; font-size: 14px; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { padding: 12px 15px; margin: 5px 0; border-radius: 12px; cursor: pointer; transition: 0.3s; color: #374151; }
+        .sidebar li:hover { background: #f3f4f6; }
+        .sidebar li.active { background: #16a34a; color: white; }
+        
+        .content { flex: 1; }
+        .content h1 { font-size: 28px; color: #1f2937; margin-bottom: 8px; }
+        .desc { color: #6b7280; margin-bottom: 25px; }
+        
+        .stats-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .stat-card h3 { font-size: 32px; color: #16a34a; margin-bottom: 10px; }
+        .stat-card p { color: #6b7280; }
+        
+        .recomendacoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .recomendacao-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.3s; cursor: pointer; }
+        .recomendacao-card:hover { transform: translateY(-5px); }
+        .recomendacao-card .header { background: #16a34a; color: white; padding: 15px; }
+        .recomendacao-card .body { padding: 20px; }
+        .recomendacao-card h3 { margin-bottom: 10px; }
+        .similaridade { display: inline-block; background: #e5e7eb; color: #16a34a; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-top: 10px; }
+        
+        .loading { text-align: center; padding: 40px; color: #6b7280; }
+        
+        @media (max-width: 900px) { .container { flex-direction: column; } .sidebar { width: 100%; } .stats-cards { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo"><img src="imagens/index/Logo1.jpeg" alt="Logo"><span>Trilha Acadêmica</span></div>
+    <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="cursos.html">Cursos</a>
+    <a href="questionario.html">Questionário</a>
+    <a href="#">Sobre</a>
+    </nav>
+    <button class="btn" id="btnSair">Sair</button>
+</header>
+
+<main class="container">
+    <aside class="sidebar">
+        <div class="profile">
+            <img class="pro" id="profileImage" src="https://via.placeholder.com/100" alt="Perfil" onclick="abrirModalFoto()">
+            <h3 id="userName">Carregando...</h3>
+            <p id="userEmail">carregando@email.com</p>
+        </div>
+        <ul>
+            <li class="active" data-tab="dashboard">Dashboard</li>
+            <li data-tab="recomendacoes">Recomendações</li>
+            <li data-tab="config">Configurações</li>
+        </ul>
+    </aside>
+
+    <section class="content" id="conteudoDashboard">
+        <h1>Dashboard</h1>
+        <p class="desc">Bem-vindo ao seu painel de controle. Acompanhe seu progresso e recomendações.</p>
+        
+        <div class="stats-cards" id="statsContainer">
+            <div class="stat-card"><h3 id="statsTrilhas">0</h3><p>Trilhas Recomendadas</p></div>
+            <div class="stat-card"><h3 id="statsCursos">0</h3><p>Cursos Concluídos</p></div>
+            <div class="stat-card"><h3 id="statsProgresso">0%</h3><p>Progresso Total</p></div>
+        </div>
+        
+        <div class="recomendacoes-grid" id="ultimasRecomendacoes">
+            <div class="loading">Carregando recomendações...</div>
+        </div>
+    </section>
+
+    <section class="content" id="conteudoRecomendacoes" style="display:none;">
+        <h1>Minhas Recomendações</h1>
+        <p class="desc">Trilhas personalizadas baseadas no seu perfil.</p>
+        <div id="todasRecomendacoes" class="recomendacoes-grid"></div>
+    </section>
+
+    <section class="content" id="conteudoConfig" style="display:none;">
+        <h1>Configurações</h1>
+        <p class="desc">Personalize seu perfil.</p>
+        <div class="stat-card"><button class="btn" onclick="abrirModalFoto()">Alterar Foto de Perfil</button></div>
+    </section>
+</main>
+
+<div id="modalFoto" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:white; border-radius:20px; padding:30px; width:90%; max-width:400px; text-align:center;">
+        <h3>Alterar Foto de Perfil</h3>
+        <input type="file" id="fotoInput" accept="image/*" style="margin:20px 0; padding:10px; width:100%;">
+        <button class="btn" onclick="salvarFoto()">Salvar</button>
+        <button class="btn" style="background:#ccc; margin-top:10px;" onclick="fecharModalFoto()">Cancelar</button>
+    </div>
+</div>
+
+<script>
+    const API_AUTH = 'http://localhost:3000/api/auth';
+    const API_REC = 'http://localhost:3000/api/recomendacao';
+    let token = localStorage.getItem('token');
+    let user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token) window.location.href = 'login.html';
+
+    // =====================================================
+    // CARREGAR PERFIL
+    // =====================================================
+    async function carregarPerfil() {
+        try {
+            const response = await fetch(`${API_AUTH}/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.status === 401) {
+                localStorage.clear();
+                window.location.href = 'login.html';
+                return;
+            }
+            const data = await response.json();
+            if (data.user) {
+                user = data.user;
+                localStorage.setItem('user', JSON.stringify(user));
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                if (user.foto_url) {
+                    document.getElementById('profileImage').src = user.foto_url + '?t=' + Date.now();
+                }
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    }
+
+    // =====================================================
+    // CARREGAR RECOMENDAÇÕES
+    // =====================================================
+    async function carregarRecomendacoes() {
+        try {
+            const response = await fetch(`${API_REC}/recomendacoes`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            
+            if (data.success && data.recomendacoes && data.recomendacoes.length > 0) {
+                const recomendacoes = data.recomendacoes;
+                document.getElementById('statsTrilhas').textContent = recomendacoes.length;
+                document.getElementById('statsProgresso').textContent = '65%';
+                document.getElementById('statsCursos').textContent = '8';
+                
+                const html = recomendacoes.slice(0, 3).map(rec => `
+                    <div class="recomendacao-card" onclick="alert('Detalhes: ${rec.trilha}')">
+                        <div class="header"><h3>${rec.trilha}</h3></div>
+                        <div class="body">
+                            <p>${rec.descricao}</p>
+                            <p><strong>📚 ${rec.duracao}</strong></p>
+                            <span class="similaridade">${rec.similaridade}% compatível</span>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('ultimasRecomendacoes').innerHTML = html;
+                document.getElementById('todasRecomendacoes').innerHTML = recomendacoes.map(rec => `
+                    <div class="recomendacao-card" onclick="alert('Detalhes: ${rec.trilha}')">
+                        <div class="header"><h3>${rec.trilha}</h3></div>
+                        <div class="body">
+                            <p>${rec.descricao}</p>
+                            <p><strong>📚 ${rec.duracao}</strong></p>
+                            <span class="similaridade">${rec.similaridade}% compatível</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('ultimasRecomendacoes').innerHTML = '<div class="loading">Nenhuma recomendação disponível. Responda o questionário primeiro.</div>';
+                document.getElementById('todasRecomendacoes').innerHTML = '<div class="loading">Nenhuma recomendação disponível.</div>';
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            document.getElementById('ultimasRecomendacoes').innerHTML = '<div class="loading">Erro ao carregar recomendações. Verifique se o servidor Python está rodando.</div>';
+        }
+    }
+
+    // =====================================================
+    // FOTO DE PERFIL
+    // =====================================================
+    function abrirModalFoto() { document.getElementById('modalFoto').style.display = 'flex'; }
+    function fecharModalFoto() { document.getElementById('modalFoto').style.display = 'none'; }
+
+    async function salvarFoto() {
+        const file = document.getElementById('fotoInput').files[0];
+        if (!file) { alert('Selecione uma imagem'); return; }
+        
+        const formData = new FormData();
+        formData.append('foto', file);
+        
+        try {
+            const response = await fetch(`${API_AUTH}/upload-foto`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                document.getElementById('profileImage').src = data.foto_url + '?t=' + Date.now();
+                user.foto_url = data.foto_url;
+                localStorage.setItem('user', JSON.stringify(user));
+                alert('Foto atualizada com sucesso!');
+                fecharModalFoto();
+            } else { alert(data.error || 'Erro ao atualizar foto'); }
+        } catch (error) { alert('Erro de conexão'); }
+    }
+
+    // =====================================================
+    // NAVEGAÇÃO
+    // =====================================================
+    document.querySelectorAll('.sidebar li').forEach(li => {
+        li.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar li').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            const tab = this.dataset.tab;
+            document.getElementById('conteudoDashboard').style.display = tab === 'dashboard' ? 'block' : 'none';
+            document.getElementById('conteudoRecomendacoes').style.display = tab === 'recomendacoes' ? 'block' : 'none';
+            document.getElementById('conteudoConfig').style.display = tab === 'config' ? 'block' : 'none';
+        });
+    });
+
+    function sair() { localStorage.clear(); window.location.href = 'login.html'; }
+    document.getElementById('btnSair').addEventListener('click', sair);
+
+    // =====================================================
+    // INICIAR
+    // =====================================================
+    carregarPerfil();
+    carregarRecomendacoes();
+</script>
+</body>
+</html>

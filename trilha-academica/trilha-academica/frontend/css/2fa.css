@@ -1,0 +1,148 @@
+/* CSS para Autenticação de Duas Etapas */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+}
+
+.container-2fa {
+  background: #ffffff;
+  padding: 38px;
+  border-radius: 28px;
+  box-shadow: 0 18px 42px rgba(0,0,0,0.16);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.cabecalho-2fa h1 {
+  font-size: 28px;
+  color: #1a2b49;
+  margin-bottom: 10px;
+}
+
+.cabecalho-2fa p {
+  color: #6b7280;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.icone-2fa {
+  font-size: 48px;
+  color: #2e7d32;
+  margin-bottom: 20px;
+}
+
+.formulario-2fa {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.grupo-formulario {
+  text-align: left;
+}
+
+.grupo-formulario label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 500;
+}
+
+.grupo-formulario input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+.grupo-formulario input:focus {
+  border-color: #2e7d32;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+}
+
+.codigo-2fa input {
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 10px;
+  font-weight: bold;
+}
+
+.botao-primario {
+  background: #2e7d32;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: 0.3s;
+  width: 100%;
+}
+
+.botao-primario:hover {
+  background: #1b5e20;
+  transform: scale(1.02);
+}
+
+.mensagem {
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.mensagem.sucesso {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.mensagem.erro {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.links {
+  margin-top: 20px;
+}
+
+.links a {
+  color: #2e7d32;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+
+/* Responsivo */
+@media (max-width: 480px) {
+  .container-2fa {
+    padding: 30px 20px;
+  }
+
+  .cabecalho-2fa h1 {
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Curso - Trilha Acadêmica</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px; }
+        
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .curso-icon { font-size: 64px; margin-bottom: 20px; text-align: center; }
+        h1 { color: #333; margin-bottom: 20px; text-align: center; }
+        .info { background: #f3f4f6; padding: 20px; border-radius: 16px; margin: 20px 0; }
+        .info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+        .info-item:last-child { border-bottom: none; }
+        .info-label { font-weight: 600; color: #374151; }
+        .info-value { color: #6b7280; }
+        .btn-voltar { background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 20px; }
+        .btn-voltar:hover { background: #5a67d8; }
+        .loading { text-align: center; padding: 40px; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="detalhesContainer" class="loading">Carregando detalhes do curso...</div>
+        <button class="btn-voltar" onclick="window.location.href='cursos.html'">← Voltar para Cursos</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const token = localStorage.getItem('token');
+        
+        if (!token) { window.location.href = 'login.html'; }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const area = urlParams.get('area');
+        const subarea = urlParams.get('subarea');
+        const nivel = urlParams.get('nivel');
+        const curso = urlParams.get('curso');
+        
+        async function carregarDetalhes() {
+            try {
+                const response = await fetch(`${API_URL}/cursos/areas/${area}/subareas/${subarea}/${nivel}/${curso}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const cursoData = await response.json();
+                
+                let nivelClass = '';
+                let nivelCor = '';
+                if (nivel === 'Iniciante') { nivelClass = '🌱'; nivelCor = '#0369a1'; }
+                else if (nivel === 'Intermediário') { nivelClass = '📘'; nivelCor = '#b45309'; }
+                else { nivelClass = '🚀'; nivelCor = '#15803d'; }
+                
+                document.getElementById('detalhesContainer').innerHTML = `
+                    <div class="card">
+                        <div class="curso-icon">📖</div>
+                        <h1>${decodeURIComponent(curso)}</h1>
+                        <div class="info">
+                            <div class="info-item"><span class="info-label">Área</span><span class="info-value">${decodeURIComponent(area)}</span></div>
+                            <div class="info-item"><span class="info-label">Subárea</span><span class="info-value">${decodeURIComponent(subarea)}</span></div>
+                            <div class="info-item"><span class="info-label">Nível</span><span class="info-value" style="color: ${nivelCor}">${nivelClass} ${nivel}</span></div>
+                            <div class="info-item"><span class="info-label">Duração estimada</span><span class="info-value">${cursoData.duracao || '30h'}</span></div>
+                            <div class="info-item"><span class="info-label">Certificado</span><span class="info-value">${cursoData.certificado ? '✅ Sim' : '❌ Não'}</span></div>
+                        </div>
+                        <p style="color: #6b7280; line-height: 1.6; margin-top: 20px;">
+                            ${cursoData.descricao || 'Curso completo com todo o conteúdo necessário para você se tornar um especialista na área.'}
+                        </p>
+                        <button class="btn-voltar" onclick="window.location.href='cursos.html'">← Voltar para Cursos</button>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('detalhesContainer').innerHTML = '<div class="card"><p style="color:red;">Erro ao carregar detalhes do curso</p><button class="btn-voltar" onclick="window.location.href=\'cursos.html\'">Voltar</button></div>';
+            }
+        }
+        
+        carregarDetalhes();
+    </script>
+</body>
+</html>

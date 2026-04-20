@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticação de Duas Etapas - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/2fa.css">
+</head>
+<body>
+    <div class="container-2fa">
+        <div class="cabecalho-2fa">
+            <div class="icone-2fa">🔒</div>
+            <h1>Autenticação de Duas Etapas</h1>
+            <p>Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
+        </div>
+        
+        <div id="message" class="mensagem"></div>
+        
+        <form id="2faForm" class="formulario-2fa">
+            <div class="grupo-formulario codigo-2fa">
+                <label for="codigo2fa">Código 2FA:</label>
+                <input type="text" id="codigo2fa" maxlength="6" required placeholder="000000">
+            </div>
+            <button type="submit" class="botao-primario">Verificar</button>
+        </form>
+        
+        <div class="links">
+            <a href="login.html">Voltar para Login</a> | <a href="#" id="usarBackup">Usar código de backup</a>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('2faForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const codigo = document.getElementById('codigo2fa').value;
+            
+            // Assuming a function verificar2FA exists
+            const result = await verificar2FA(codigo);
+            
+            const messageDiv = document.getElementById('message');
+            if (result.success) {
+                messageDiv.className = 'mensagem sucesso';
+                messageDiv.textContent = result.message;
+                // Redirect to dashboard
+                setTimeout(() => window.location.href = 'dashboard.html', 2000);
+            } else {
+                messageDiv.className = 'mensagem erro';
+                messageDiv.textContent = result.error;
+            }
+        });
+
+        document.getElementById('usarBackup').addEventListener('click', () => {
+            // Toggle to backup code input
+            const form = document.getElementById('2faForm');
+            form.innerHTML = `
+                <div class="grupo-formulario">
+                    <label for="backupCode">Código de Backup:</label>
+                    <input type="text" id="backupCode" required placeholder="Digite o código de backup">
+                </div>
+                <button type="submit" class="botao-primario">Verificar Backup</button>
+            `;
+            // Reattach event listener
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const backupCode = document.getElementById('backupCode').value;
+                const result = await verificarBackupCode(backupCode);
+                const messageDiv = document.getElementById('message');
+                if (result.success) {
+                    messageDiv.className = 'mensagem sucesso';
+                    messageDiv.textContent = result.message;
+                    setTimeout(() => window.location.href = 'dashboard.html', 2000);
+                } else {
+                    messageDiv.className = 'mensagem erro';
+                    messageDiv.textContent = result.error;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

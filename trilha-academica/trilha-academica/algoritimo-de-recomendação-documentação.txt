@@ -1,0 +1,510 @@
+# 🧠 Algoritmo de Recomendação - Trilha Acadêmica
+
+## Guia Passo a Passo do Zero
+
+---
+
+## 1. CONCEITOS FUNDAMENTAIS
+
+### 1.1 O que é um Sistema de Recomendação?
+
+Um sistema de recomendação sugere itens (no nosso caso, trilhas de aprendizado) para usuários com base em suas preferências ou histórico.
+
+**Exemplo prático:**
+- Netflix recomenda filmes baseado no que você já assistiu
+- Amazon recomenda produtos baseado no que você comprou
+- Spotify recomenda músicas baseado no seu histórico
+
+**No nosso caso:** Recomendamos trilhas de estudo baseado nos cursos que o usuário já fez.
+
+---
+
+### 1.2 Por que Similaridade de Cosseno?
+
+A similaridade de cosseno mede o ângulo entre dois vetores. É ideal para sistemas de recomendação porque:
+
+| Característica | Explicação |
+|----------------|------------|
+| **Independente de magnitude** | Não importa quantos cursos o usuário fez, apenas o padrão |
+| **Normalizado** | Resultados sempre entre 0 (diferente) e 1 (idêntico) |
+| **Eficiente** | Rápido mesmo com muitos dados |
+| **Interpretável** | 0.8 = 80% de compatibilidade |
+
+---
+
+## 2. REPRESENTAÇÃO DOS DADOS
+
+### 2.1 O que é um Vetor?
+
+Um vetor é uma lista de números que representa características.
+
+```
+Vetor de 5 posições: [0, 1, 0, 1, 0]
+                      ↑  ↑  ↑  ↑  ↑
+                      │  │  │  │  └── Curso 4
+                      │  │  │  └───── Curso 3 (1 = concluído)
+                      │  │  └──────── Curso 2
+                      │  └─────────── Curso 1 (1 = concluído)
+                      └────────────── Curso 0
+```
+
+### 2.2 Nosso Catálogo de Cursos
+
+Temos **5 áreas de conhecimento**, cada uma com **3 níveis** e **10 cursos por nível**:
+
+```
+ÁREAS:
+├── Programação (10 cursos iniciante + 10 intermediário + 10 avançado)
+├── Ciência de Dados (10 + 10 + 10)
+├── Design UX/UI (10 + 10 + 10)
+├── Cybersegurança (10 + 10 + 10)
+└── Marketing Digital (10 + 10 + 10)
+
+TOTAL: 5 × 30 = 150 posições no vetor
+```
+
+### 2.3 Estrutura do Vetor
+
+```python
+# Posições 0-29: Programação (0-9 iniciante, 10-19 intermediário, 20-29 avançado)
+# Posições 30-59: Ciência de Dados
+# Posições 60-89: Design UX/UI
+# Posições 90-119: Cybersegurança
+# Posições 120-149: Marketing Digital
+
+vetor_usuario = [0] * 150  # Todos os cursos começam como "não concluído"
+
+# Exemplo: Usuário concluiu "Lógica de Programação" (posição 0)
+vetor_usuario[0] = 1
+
+# Exemplo: Usuário concluiu "Machine Learning" (posição 35)
+vetor_usuario[35] = 1
+```
+
+---
+
+## 3. PASSO A PASSO DO ALGORITMO
+
+### 3.1 Passo 1: Coletar Dados do Usuário
+
+O usuário responde um questionário com 5 perguntas (uma por área):
+
+```javascript
+respostas = {
+    "programacao_nivel": 2,  // 0=Não sabe, 1=Iniciante, 2=Intermediário, 3=Avançado
+    "dados_nivel": 1,
+    "design_nivel": 0,
+    "seguranca_nivel": 0,
+    "marketing_nivel": 0
+}
+```
+
+### 3.2 Passo 2: Converter Respostas em Vetor
+
+**Regra de conversão:**
+- Se nível = 1 (Iniciante): marcar todos os 10 cursos iniciantes da área como 1
+- Se nível = 2 (Intermediário): marcar todos os 20 cursos (iniciante + intermediário) como 1
+- Se nível = 3 (Avançado): marcar todos os 30 cursos da área como 1
+
+```python
+def respostas_para_vetor(respostas):
+    vetor = [0] * 150
+    
+    # Mapeamento de áreas
+    areas = {
+        "programacao_nivel": {"inicio": 0, "fim": 30},
+        "dados_nivel": {"inicio": 30, "fim": 60},
+        "design_nivel": {"inicio": 60, "fim": 90},
+        "seguranca_nivel": {"inicio": 90, "fim": 120},
+        "marketing_nivel": {"inicio": 120, "fim": 150}
+    }
+    
+    for campo, nivel in respostas.items():
+        if nivel > 0 and campo in areas:
+            inicio = areas[campo]["inicio"]
+            fim = inicio + (nivel * 10)  # 10 cursos por nível
+            
+            for i in range(inicio, fim):
+                vetor[i] = 1
+    
+    return vetor
+```
+
+**Exemplo prático:**
+
+```python
+# Usuário com programação nível 2 (intermediário)
+respostas = {"programacao_nivel": 2}
+
+vetor = respostas_para_vetor(respostas)
+# Posições 0 a 19 = 1 (20 cursos)
+# Posições 20 a 149 = 0
+```
+
+### 3.3 Passo 3: Definir as Trilhas
+
+Cada trilha é um vetor que representa quais cursos ela abrange.
+
+```python
+trilhas = {
+    "Desenvolvedor Full Stack": {
+        "vetor": [1,1,1,1,1,1,1,1,1,1,  # 10 iniciante
+                  1,1,1,1,1,1,1,1,1,1,  # 10 intermediário
+                  1,0,0,0,0,0,0,0,0,0,  # 10 avançado (só alguns)
+                  0,0,0,0,0,0,0,0,0,0,  # Outras áreas = 0
+                  ...],
+        "nivel": 2.2,
+        "descricao": "Domine front-end, back-end e banco de dados"
+    }
+}
+```
+
+### 3.4 Passo 4: Calcular Similaridade
+
+A fórmula da similaridade de cosseno é:
+
+```
+similaridade(A, B) = (A · B) / (||A|| × ||B||)
+
+Onde:
+- A · B = produto escalar (soma das multiplicações posição por posição)
+- ||A|| = √(soma dos quadrados dos valores de A)
+```
+
+**Exemplo prático com vetores pequenos (5 posições):**
+
+```python
+# Vetor do usuário
+usuario = [1, 0, 1, 0, 1]
+
+# Vetor da trilha
+trilha = [1, 1, 1, 0, 0]
+
+# Passo 1: Produto escalar (A · B)
+produto_escalar = (1×1) + (0×1) + (1×1) + (0×0) + (1×0)
+                = 1 + 0 + 1 + 0 + 0 = 2
+
+# Passo 2: Magnitude do usuário ||A||
+magnitude_usuario = √(1² + 0² + 1² + 0² + 1²)
+                  = √(1 + 0 + 1 + 0 + 1)
+                  = √3 ≈ 1.73
+
+# Passo 3: Magnitude da trilha ||B||
+magnitude_trilha = √(1² + 1² + 1² + 0² + 0²)
+                 = √(1 + 1 + 1 + 0 + 0)
+                 = √3 ≈ 1.73
+
+# Passo 4: Similaridade
+similaridade = 2 / (1.73 × 1.73) = 2 / 3 = 0.667 (66.7%)
+```
+
+### 3.5 Passo 5: Implementação em Python
+
+```python
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Vetor do usuário (150 posições)
+usuario = np.array([1, 0, 1, 0, 1, 0, ...])  # 150 posições
+
+# Matriz de trilhas (15 trilhas × 150 posições)
+trilhas = np.array([
+    [1, 1, 1, 1, 0, 0, ...],  # Trilha 1
+    [1, 1, 0, 1, 1, 0, ...],  # Trilha 2
+    # ... mais 13 trilhas
+])
+
+# Calcular similaridade
+similaridades = cosine_similarity([usuario], trilhas)[0]
+# Resultado: [0.67, 0.45, 0.82, 0.33, ...]
+```
+
+---
+
+## 4. CÓDIGO COMPLETO DO ALGORITMO
+
+### 4.1 Versão Simplificada (para entendimento)
+
+```python
+import math
+
+def cosine_similarity(vetor1, vetor2):
+    """Calcula a similaridade entre dois vetores"""
+    # Produto escalar
+    produto = sum(a * b for a, b in zip(vetor1, vetor2))
+    
+    # Magnitudes
+    mag1 = math.sqrt(sum(a * a for a in vetor1))
+    mag2 = math.sqrt(sum(b * b for b in vetor2))
+    
+    # Evitar divisão por zero
+    if mag1 == 0 or mag2 == 0:
+        return 0
+    
+    return produto / (mag1 * mag2)
+
+# Exemplo
+usuario = [1, 0, 1, 0, 1]
+trilha = [1, 1, 1, 0, 0]
+
+sim = cosine_similarity(usuario, trilha)
+print(f"Similaridade: {sim * 100:.1f}%")  # 66.7%
+```
+
+### 4.2 Versão Completa com NumPy (recomendada)
+
+```python
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+class RecomendadorTrilhas:
+    def __init__(self):
+        self.cursos_por_area = {
+            "Programação": {"inicio": 0, "fim": 30},
+            "Ciência de Dados": {"inicio": 30, "fim": 60},
+            "Design UX/UI": {"inicio": 60, "fim": 90},
+            "Cybersegurança": {"inicio": 90, "fim": 120},
+            "Marketing Digital": {"inicio": 120, "fim": 150}
+        }
+        
+        self.trilhas = self._definir_trilhas()
+    
+    def _definir_trilhas(self):
+        """Define o vetor de cada trilha"""
+        trilhas = {}
+        
+        # Desenvolvedor Full Stack (foca em Programação)
+        vetor = [0] * 150
+        for i in range(30):  # 30 cursos de programação
+            vetor[i] = 1
+        trilhas["Desenvolvedor Full Stack"] = vetor
+        
+        # Frontend Developer (foca em Programação e Design)
+        vetor = [0] * 150
+        for i in range(20):  # 20 cursos iniciante/intermediário programação
+            vetor[i] = 1
+        for i in range(60, 80):  # 20 cursos design
+            vetor[i] = 1
+        trilhas["Frontend Developer"] = vetor
+        
+        # Adicionar mais trilhas...
+        
+        return trilhas
+    
+    def usuario_para_vetor(self, respostas):
+        """Converte respostas do questionário em vetor"""
+        vetor = [0] * 150
+        
+        for area, config in self.cursos_por_area.items():
+            campo = f"{area.lower().replace(' ', '_')}_nivel"
+            nivel = respostas.get(campo, 0)
+            
+            if nivel > 0:
+                inicio = config["inicio"]
+                fim = inicio + (nivel * 10)
+                for i in range(inicio, fim):
+                    vetor[i] = 1
+        
+        return vetor
+    
+    def recomendar(self, respostas, top_n=5):
+        """Recomenda as melhores trilhas"""
+        # 1. Converter respostas em vetor
+        usuario = self.usuario_para_vetor(respostas)
+        usuario = np.array(usuario).reshape(1, -1)
+        
+        # 2. Preparar matriz de trilhas
+        nomes = list(self.trilhas.keys())
+        matriz_trilhas = np.array([self.trilhas[nome] for nome in nomes])
+        
+        # 3. Calcular similaridades
+        similaridades = cosine_similarity(usuario, matriz_trilhas)[0]
+        
+        # 4. Ordenar resultados
+        resultados = []
+        for i, nome in enumerate(nomes):
+            resultados.append({
+                "trilha": nome,
+                "similaridade": round(similaridades[i] * 100, 2)
+            })
+        
+        resultados.sort(key=lambda x: x["similaridade"], reverse=True)
+        
+        return resultados[:top_n]
+```
+
+---
+
+## 5. EXEMPLO PRÁTICO COMPLETO
+
+### 5.1 Cenário de Teste
+
+```python
+# Criar recomendador
+recomendador = RecomendadorTrilhas()
+
+# Usuário responde o questionário
+respostas = {
+    "programacao_nivel": 2,  # Intermediário
+    "dados_nivel": 1,        # Iniciante
+    "design_nivel": 0,       # Não sabe
+    "seguranca_nivel": 0,    # Não sabe
+    "marketing_nivel": 0     # Não sabe
+}
+
+# Obter recomendações
+recomendacoes = recomendador.recomendar(respostas)
+
+# Exibir resultados
+for rec in recomendacoes:
+    print(f"{rec['trilha']}: {rec['similaridade']}% compatível")
+```
+
+### 5.2 Saída Esperada
+
+```
+Desenvolvedor Full Stack: 85.3% compatível
+Frontend Developer: 72.1% compatível
+Backend Developer: 68.5% compatível
+Cientista de Dados: 35.2% compatível
+DevOps Engineer: 28.7% compatível
+```
+
+---
+
+## 6. VISUALIZAÇÃO DO ALGORITMO
+
+### 6.1 Representação Gráfica
+
+```
+Espaço Vetorial (simplificado para 2 dimensões):
+
+        ↑ (Curso 2)
+        |
+        |    • Usuário
+        |   /|
+        |  / |  Ângulo menor = mais similar
+        | /  |
+        |/   |
+        •----→ (Curso 1)
+        Trilha
+
+Quanto menor o ângulo, maior a similaridade.
+Cosseno de 0° = 1 (100% similar)
+Cosseno de 90° = 0 (0% similar)
+```
+
+### 6.2 Matriz de Similaridade
+
+```
+                FullStack  Frontend  Backend  DataSci  DevOps
+FullStack        1.00      0.72      0.68     0.35     0.29
+Frontend         0.72      1.00      0.45     0.28     0.22
+Backend          0.68      0.45      1.00     0.31     0.25
+DataSci          0.35      0.28      0.31     1.00     0.18
+DevOps           0.29      0.22      0.25     0.18     1.00
+```
+
+---
+
+## 7. EXERCÍCIO PRÁTICO
+
+### 7.1 Calcule Manualmente
+
+**Dados:**
+```
+Usuário: [1, 0, 1]
+Trilha A: [1, 1, 0]
+Trilha B: [0, 1, 1]
+```
+
+**Perguntas:**
+1. Qual a similaridade entre usuário e Trilha A?
+2. Qual a similaridade entre usuário e Trilha B?
+3. Qual trilha é mais recomendada?
+
+### 7.2 Resolução
+
+```
+Trilha A:
+Produto = (1×1)+(0×1)+(1×0) = 1+0+0 = 1
+Mag_usuario = √(1²+0²+1²) = √2 ≈ 1.41
+Mag_trilha = √(1²+1²+0²) = √2 ≈ 1.41
+Sim = 1 / (1.41×1.41) = 1 / 2 = 0.50 (50%)
+
+Trilha B:
+Produto = (1×0)+(0×1)+(1×1) = 0+0+1 = 1
+Mag_usuario = 1.41
+Mag_trilha = √(0²+1²+1²) = √2 = 1.41
+Sim = 1 / 2 = 0.50 (50%)
+
+Empate! Ambas têm 50% de similaridade.
+```
+
+---
+
+## 8. RESOLUÇÃO DE PROBLEMAS COMUNS
+
+| Problema | Causa | Solução |
+|----------|-------|---------|
+| Todas similaridades = 0 | Vetor usuário todo zero | Usuário não respondeu nada |
+| Todas similaridades = 1 | Vetor trilha igual ao usuário | Ajustar matriz de trilhas |
+| Valores muito baixos | Vetores esparsos | Normalizar os dados |
+| Erro de divisão por zero | Vetor zero | Adicionar verificação |
+
+---
+
+## 9. FLUXOGRAMA DO ALGORITMO
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      INÍCIO                                      │
+└─────────────────────────────┬───────────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Usuário responde questionário (5 perguntas)                    │
+│  - Nível em Programação                                         │
+│  - Nível em Ciência de Dados                                    │
+│  - Nível em Design UX/UI                                        │
+│  - Nível em Cybersegurança                                      │
+│  - Nível em Marketing Digital                                   │
+└─────────────────────────────┬───────────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Converter respostas em vetor de 150 posições                   │
+│  - Nível 1 → 10 cursos marcados como 1                         │
+│  - Nível 2 → 20 cursos marcados como 1                         │
+│  - Nível 3 → 30 cursos marcados como 1                         │
+└─────────────────────────────┬───────────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Para cada trilha (15 trilhas):                                │
+│  ├── Calcular produto escalar (usuário × trilha)               │
+│  ├── Calcular magnitude do usuário                             │
+│  ├── Calcular magnitude da trilha                              │
+│  └── Similaridade = produto / (mag_usuario × mag_trilha)       │
+└─────────────────────────────┬───────────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Ordenar trilhas por similaridade (maior para menor)            │
+└─────────────────────────────┬───────────────────────────────────┘
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Retornar TOP 5 trilhas para o usuário                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 10. CHECKLIST DE IMPLEMENTAÇÃO
+
+- [ ] Definir catálogo de cursos (5 áreas × 3 níveis × 10 cursos)
+- [ ] Criar mapeamento de posições (0-149)
+- [ ] Implementar função `respostas_para_vetor()`
+- [ ] Definir vetores das 15 trilhas
+- [ ] Implementar função de similaridade de cosseno
+- [ ] Testar com diferentes perfis de usuário
+- [ ] Ajustar pesos se necessário
+- [ ] Integrar com o frontend
+
+---

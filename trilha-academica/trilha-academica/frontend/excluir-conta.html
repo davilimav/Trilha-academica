@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exclusão de Conta - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/excluir-conta.css">
+</head>
+<body>
+    <div class="container-exclusao">
+        <div class="cabecalho-exclusao">
+            <div class="icone-exclusao">⚠️</div>
+            <h1>Exclusão de Conta</h1>
+            <p>Esta ação é irreversível. Confirme para excluir sua conta permanentemente.</p>
+        </div>
+        
+        <div class="caixa-aviso">
+            <h3>Atenção!</h3>
+            <p>Ao excluir sua conta, você perderá acesso a todos os dados, cursos e recomendações. Esta ação não pode ser desfeita.</p>
+        </div>
+        
+        <div id="message" class="mensagem"></div>
+        
+        <form id="excluirForm" class="formulario-exclusao">
+            <div class="grupo-formulario">
+                <label for="senha">Digite sua senha para confirmar:</label>
+                <input type="password" id="senha" required>
+            </div>
+            <div class="grupo-checkbox">
+                <input type="checkbox" id="confirmacao" required>
+                <label for="confirmacao">Entendo que esta ação é irreversível e desejo excluir minha conta.</label>
+            </div>
+            <button type="submit" class="botao-exclusao">Excluir Conta</button>
+        </form>
+        
+        <div class="links">
+            <a href="dashboard.html">Cancelar e voltar ao Dashboard</a>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('excluirForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const senha = document.getElementById('senha').value;
+            const confirmacao = document.getElementById('confirmacao').checked;
+            
+            if (!confirmacao) {
+                document.getElementById('message').className = 'mensagem erro';
+                document.getElementById('message').textContent = 'Você deve confirmar a exclusão.';
+                return;
+            }
+            
+            // Assuming a function excluirConta exists
+            const result = await excluirConta(senha);
+            
+            const messageDiv = document.getElementById('message');
+            if (result.success) {
+                messageDiv.className = 'mensagem sucesso';
+                messageDiv.textContent = result.message;
+                // Redirect to login or home
+                setTimeout(() => window.location.href = 'index.html', 3000);
+            } else {
+                messageDiv.className = 'mensagem erro';
+                messageDiv.textContent = result.error;
+            }
+        });
+    </script>
+</body>
+</html>
