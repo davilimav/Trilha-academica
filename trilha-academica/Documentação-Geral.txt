@@ -1,278 +1,388 @@
-## 📘 **Documento Completo do Sistema - Trilha Acadêmica**
 
-### **Versão 2.6""
-Última atualização: Maio/2026
+# 📄 BASE DE CONHECIMENTO — TRILHA ACADÊMICA
 
 ---
 
-## 1. **VISÃO GERAL DO SISTEMA**
+## 1. Objetivo da Base de Conhecimento
 
-O **Trilha Acadêmica** é uma plataforma web de **recomendação personalizada de cursos e trilhas de aprendizado**. Seu objetivo é ajudar estudantes e profissionais a descobrir conteúdos educacionais alinhados com seus interesses, nível de conhecimento e objetivos de carreira.
+Esta documentação foi criada para auxiliar futuros desenvolvedores responsáveis pela manutenção, evolução e integração do sistema Trilha Acadêmica.
 
-O sistema combina:
-- **Backend em Node.js** com banco de dados MySQL para gerenciar usuários, progresso e avaliações.
-- **API de recomendação em Python** (Flask + scikit-learn) que utiliza similaridade de cosseno para sugerir trilhas.
-- **Frontend responsivo** com HTML, CSS (arquitetura de variáveis globais) e JavaScript puro.
+### Objetivos:
 
----
-
-## 2. **PRINCIPAIS FUNCIONALIDADES**
-
-### **2.1. Autenticação e Perfil**
-- Cadastro de novos usuários (nome, e‑mail, senha).
-- Login com token JWT (expira em 7 dias).
-- Recuperação de senha por e‑mail (Nodemailer).
-- Upload de foto de perfil (multer, armazenamento local).
-- Edição de informações pessoais: telefone, idade, cidade, estado, faculdade, semestre, bio.
-
-### **2.2. Questionário de Interesses**
-- O usuário escolhe áreas de conhecimento e cursos específicos de seu interesse.
-- As respostas são salvas na tabela `questionario_respostas`.
-- O sistema nunca força o usuário a responder novamente – apenas se ele optar por refazer o questionário (botão na área de configurações).
-
-### **2.3. Recomendação de Trilhas**
-- Os dados do questionário são enviados para a API Python.
-- O algoritmo calcula o **nível de conhecimento médio** (1‑3) e a **similaridade** entre o perfil do usuário e 15 trilhas predefinidas.
-- As recomendações são exibidas no dashboard, com percentual de compatibilidade.
-
-### **2.4. Catálogo de Cursos
-- Áreas, subáreas e cursos organizados hierarquicamente.
-- Visualização de detalhes do curso: descrição, tópicos, projetos, pré‑requisitos, carga horária, certificado.
-- Botão **“Marcar como concluído”** – registra o curso na tabela `cursos_concluidos`, concede pontos, atualiza progresso e desbloqueia conquistas.
-
-### **2.5. Progresso e Gamificação**
-- Tabela `progresso_usuario` armazena: nível atual, pontos totais, horas estudadas.
-- Conquistas automáticas ao concluir 1, 3, 5 cursos.
-- Currículo completo do aluno (visualização + download PDF) com dados pessoais, formação, cursos concluídos, conquistas e estatísticas.
-
-### **2.6. Painel Administrativo**
-- Acesso restrito a usuários com `is_admin = 1`.
-- Estatísticas gerais: total de usuários, questionários respondidos, cursos concluídos, usuários ativos.
-- Gráficos (Chart.js) de top especializações e nível médio por área.
-- Listagem de usuários com seus níveis de conhecimento.
-
-### **2.7. Currículo em PDF**
-- O aluno pode baixar um PDF com todas as suas informações (html2pdf.js).
+* Visão arquitetural completa
+* Estrutura do projeto atualizada
+* Funcionamento das integrações
+* Organização das pastas
+* Fluxo geral do sistema
+* Boas práticas adotadas
+* Troubleshooting
+* Deploy e configuração
+* Guia de testes
 
 ---
 
-## 3. **TECNOLOGIAS UTILIZADAS**
+## 2. Visão Geral da Arquitetura
 
-| Camada       | Tecnologias                                                                 |
-|--------------|-----------------------------------------------------------------------------|
-| Backend      | Node.js, Express, MySQL2, JSON Web Token, bcryptjs, multer, nodemailer      |
-| Recomendação | Python, Flask, Flask‑CORS, NumPy, scikit‑learn                               |
-| Frontend     | HTML5, CSS3 (variáveis CSS), JavaScript (fetch API), Chart.js, html2pdf.js |
-| Banco de Dados | MySQL 8.0                                                                  |
+O sistema utiliza arquitetura cliente-servidor em 3 camadas:
+
+### 2.1 Frontend
+
+* HTML5
+* CSS3 (variáveis globais)
+* JavaScript Vanilla
+* Chart.js
+* html2pdf.js
 
 ---
 
-## 4. **PREPARAÇÃO DO AMBIENTE (PASSO A PASSO)**
+### 2.2 Backend (Node.js)
 
-> **Pré‑requisitos:**  
-> - Node.js (versão 18 ou superior) instalado.  
-> - Python 3.10 ou superior instalado.  
-> - MySQL Server instalado e rodando.  
-> - Editor de código (VS Code recomendado).
+* Node.js 18+
+* Express.js
+* JWT Authentication
+* bcryptjs
+* multer
+* nodemailer
+* axios
+* mysql2
 
-### **4.1. Clonar / Obter o projeto**
-```bash
-cd C:\Users\SeuUsuario\Desktop
-git clone https://github.com/seu-repositorio/trilha-academica.git
-cd trilha-academica
+---
+
+### 2.3 API Python (Machine Learning)
+
+* Python 3.11+
+* Flask
+* Flask-CORS
+* NumPy
+* scikit-learn
+* gunicorn
+
+---
+
+### 2.4 Banco de Dados
+
+* MySQL 8.0
+* Clever Cloud (produção)
+* PostgreSQL (futuro)
+
+---
+
+## 3. Estrutura de Pastas
+
+```
+trilha-academica/
+├── config/
+├── controllers/
+├── data/
+├── frontend/
+│   ├── css/
+│   ├── imagens/
+│   ├── *.html
+├── middlewares/
+├── routes/
+├── services/
+├── ml_api.py
+├── server.js
+├── package.json
+├── requirements.txt
+├── render.yaml
+└── .env
 ```
 
-### **4.2. Configurar o banco de dados**
-- Acesse o MySQL (Workbench ou terminal):
-```sql
-CREATE DATABASE trilha_academica;
-USE trilha_academica;
-```
-- Execute o script de criação das tabelas (fornecido separadamente ou contido no arquivo `database.sql`).
-- As principais tabelas são: `users`, `questionario_respostas`, `cursos_concluidos`, `progresso_usuario`, `conquistas`.
+---
 
-### **4.3. Configurar variáveis de ambiente**
-Crie um arquivo `.env` na raiz do projeto com o seguinte conteúdo (ajuste conforme seu ambiente):
-```env
+## 4. Fluxo Geral do Sistema
+
+```
+Frontend
+   ↓
+Backend (Node.js)
+   ↓
+JWT Middleware
+   ↓
+Controllers
+   ↓
+MySQL
+   ↓
+API Python (ML)
+   ↓
+Algoritmo de Similaridade
+   ↓
+Recomendações
+```
+
+---
+
+## 5. Configuração de Ambiente (.env)
+
+```
+PORT=3000
+NODE_ENV=development
+
 DB_HOST=localhost
+DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=sua_senha
 DB_NAME=trilha_academica
-JWT_SECRET=uma_chave_muito_segura
+
+JWT_SECRET=trilha_secret_key
+
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=seu_email@gmail.com
 EMAIL_PASSWORD=senha_app
-PORT=3000
-```
 
-### **4.4. Instalar dependências do Node**
-```bash
-npm install
+PYTHON_API_URL=http://localhost:5000
+FRONTEND_URL=http://localhost:3000
 ```
-
-### **4.5. Instalar dependências do Python**
-Abra um segundo terminal:
-```bash
-cd python-recomendacao
-pip install flask flask-cors numpy scikit-learn
-```
-
-### **4.6. Popular o banco (opcional, mas recomendado)**
-Execute o script de população para criar usuários fictícios, questionários, cursos concluídos, etc.:
-```bash
-node popular-banco-completo.js
-```
-
-### **4.7. Criar usuário administrador**
-```bash
-node criar-admin-correto.js
-```
-(O script criará o admin com e‑mail `admin@trilhaacademica.com` e senha `admin123`.)
 
 ---
 
-## 5. **EXECUÇÃO DO SISTEMA**
+## 6. Banco de Dados
 
-### **5.1. Iniciar os servidores**
-Você precisará de **dois terminais abertos** simultaneamente.
+### users
 
-**Terminal 1 – Backend Node:**
-```bash
-cd C:\Users\Caio\Desktop\SITES\trilha-academica
-node server.js
-```
-*Saída esperada:*  
-```
-🚀 Servidor rodando em http://localhost:3000
-✅ Banco de dados conectado!
-```
-
-**Terminal 2 – API de Recomendação (Python):**
-```bash
-cd C:\Users\Caio\Desktop\SITES\trilha-academica\python-recomendacao
-python app.py
-```
-*Saída esperada:*  
-```
-🚀 Servidor rodando em http://localhost:5000
-```
-
-### **5.2. Acessar a aplicação**
-- Abra o navegador e digite: `http://localhost:3000`
-- Use as credenciais de admin ou crie um novo usuário.
-
-### **5.3. Fluxo típico de uso**
-1. **Login** → se nunca respondeu o questionário, é redirecionado para o **questionário**.
-2. **Resposta do questionário** → escolha áreas e cursos de interesse.
-3. **Dashboard** → visualiza recomendações de trilhas, estatísticas de progresso.
-4. **Cursos** → navega pelo catálogo, acessa detalhes e conclui cursos.
-5. **Currículo** → edita informações pessoais e baixa PDF.
-6. **Admin** (se for administrador) → acessa gráficos e gerencia usuários.
+* id
+* name
+* email
+* password
+* foto_url
+* is_admin
+* telefone
+* idade
+* cidade
+* estado
+* faculdade
+* semestre
+* bio
 
 ---
 
-## 6. **GUIA DE PERSONALIZAÇÃO VISUAL (PARA O COLEGA DESIGNER)**
+### questionario_respostas
 
-Todo o estilo visual é controlado pelo arquivo **`frontend/css/trilha-global.css`**.  
-As variáveis CSS permitem alterar cores, tamanhos, espaçamentos e sombras globalmente.
+* programacao_nivel
+* dados_nivel
+* design_nivel
+* seguranca_nivel
+* marketing_nivel
 
-### **6.1. Alterar a cor principal do site**
-No arquivo `trilha-global.css`, localize:
-```css
---cor-primaria: #16a34a;
---cor-primaria-escura: #15803d;
---cor-primaria-clara: #22c55e;
+---
+
+### cursos_concluidos
+
+* curso_nome
+* trilha_nome
+* horas_dedicadas
+* pontos_ganhos
+
+---
+
+### progresso_usuario
+
+* pontos_total
+* horas_estudadas
+* nivel_atual
+
+---
+
+### conquistas
+
+* conquista_nome
+* conquista_descricao
+* pontos_ganhos
+
+---
+
+## 7. API de Recomendação (Python)
+
+### Endpoints
+
+* GET /health
+* GET /ping
+* POST /recomendar
+* POST /questionario/recomendar
+
+---
+
+### Exemplo Request
+
 ```
-Basta mudar o valor hexadecimal para a cor desejada (ex.: azul `#3b82f6`).
-
-### **6.2. Mudar o arredondamento dos cantos**
-```css
---borda-raio-sm: 8px;   /* botões, inputs */
---borda-raio-lg: 16px;  /* cards, containers */
-```
-
-### **6.3. Ajustar espaçamentos**
-```css
---espaco-md: 16px;
---espaco-lg: 24px;
-```
-
-### **6.4. Alterar fontes**
-```css
---fonte-principal: 'Segoe UI', system-ui, sans-serif;
-```
-
-### **6.5. Personalização por página (se necessário)**
-Cada página HTML possui uma seção `<style>` específica para ajustes finos. Para mudar, por exemplo, o tamanho do título na página inicial (`index.html`):
-```css
-.hero-text h1 {
-    font-size: 48px;
+{
+  "programacao_nivel": 2,
+  "dados_nivel": 1,
+  "design_nivel": 1,
+  "seguranca_nivel": 0,
+  "marketing_nivel": 0
 }
 ```
 
-### **6.6. Como testar as alterações**
-1. Salve o arquivo CSS.
-2. Atualize a página no navegador (F5).
-3. As mudanças refletem instantaneamente.
+---
+
+### Fluxo
+
+1. Frontend envia questionário
+2. Backend repassa para API Python
+3. Calcula nível médio
+4. Aplica similaridade
+5. Retorna recomendações
 
 ---
 
-## 7. **ESTRUTURA DO BANCO DE DADOS (RESUMO)**
+## 8. Autenticação
 
-| Tabela                  | Descrição                                                                 |
-|-------------------------|---------------------------------------------------------------------------|
-| `users`                 | Armazena dados de login, perfil completo (nome, email, telefone, faculdade, bio, etc.) e `is_admin`. |
-| `questionario_respostas`| Níveis do usuário para 5 áreas (programação, dados, design, segurança, marketing). |
-| `cursos_concluidos`     | Registra quais cursos o usuário já completou, data e horas dedicadas.      |
-| `progresso_usuario`     | Pontos, horas estudadas, nível atual.                                      |
-| `conquistas`            | Conquistas desbloqueadas automaticamente.                                  |
-| `user_especializacoes`  | (Opcional) Usado em versões antigas – mantido para compatibilidade.        |
+### Fluxo
 
----
-
-## 8. **SOLUÇÃO DE PROBLEMAS COMUNS**
-
-| Problema                                      | Provável causa e solução                                                             |
-|-----------------------------------------------|---------------------------------------------------------------------------------------|
-| **Erro `ER_CON_COUNT_ERROR` / conexão MySQL** | MySQL não está rodando. Inicie o serviço ou verifique credenciais no `.env`.          |
-| **API Python não retorna recomendações**      | Servidor Python não está rodando. Execute `python app.py` na pasta `python-recomendacao`. |
-| **Botão “Marcar concluído” não aparece**      | Verifique se o arquivo `curso-detalhe.html` está atualizado (versão com botão).       |
-| **Perfil não salva informações**              | Confirme se o `getProfile` está retornando os campos extras (telefone, idade etc.). Veja item 9.1. |
-| **Admin Panel não carrega gráficos**          | As tabelas `user_especializacoes` ou `user_stats` podem não existir. Atualize o `adminController.js` para usar `cursos_concluidos` como fallback (conforme versão entregue). |
-| **Login redireciona para questionário sempre**| O campo `questionario_respondido` não está sendo marcado. Rode: `UPDATE users SET questionario_respondido = 1 WHERE email = '...';` |
-| **Erro `Cannot access 'API_URL' before initialization`** | A ordem das variáveis no script da página está incorreta. Use o código corrigido do `admin-panel.html` fornecido. |
+1. Login do usuário
+2. Backend valida credenciais
+3. Gera JWT
+4. Armazena no localStorage
+5. Middleware valida rotas
 
 ---
 
-## 9. **MANUTENÇÃO E MELHORIAS FUTURAS**
+### Estrutura JWT
 
-### **9.1. Adicionar novos campos ao perfil**
-- Altere a tabela `users` (adicione as colunas).
-- Atualize a query `SELECT` em `getProfile` (authController.js).
-- Adicione os campos ao formulário de edição em `perfil-completo.html`.
-
-### **9.2. Incluir novas trilhas de recomendação**
-- Edite o dicionário `trilhas_config` no arquivo `python-recomendacao/app.py`.
-- Recomenda‑se também adicionar os cursos correspondentes no catálogo (`data/cursosConteudo.js` e `cursoController.js`).
-
-### **9.3. Melhorar a segurança**
-- Implementar refresh token.
-- Adicionar rate‑limiting nas rotas.
-- Usar HTTPS em produção.
-
-### **9.4. Funcionalidades sugeridas**
-- Avaliação com estrelas para cursos.
-- Comentários dos usuários.
-- Geração de certificado em PDF ao concluir uma trilha completa.
-- Dashboard com mais gráficos de progresso pessoal.
+```
+{
+  "id": 1,
+  "name": "Usuario",
+  "email": "email@email.com",
+  "is_admin": 0
+}
+```
 
 ---
 
-## 10. **CONCLUSÃO**
+## 9. Como Executar
 
-O **Trilha Acadêmica** é um sistema maduro, com arquitetura cliente‑servidor, pronto para ser utilizado em ambientes educacionais. A separação entre frontend (CSS modular), backend Node.js e API de recomendação em Python garante escalabilidade e facilidade de manutenção. O design baseado em variáveis CSS permite que um profissional não‑programador altere completamente a identidade visual do sistema com poucos minutos de trabalho.
+### Requisitos
 
-
+* Node.js 18+
+* Python 3.11+
+* MySQL 8.0
 
 ---
+
+### Instalação
+
+```
+npm install
+pip install -r requirements.txt
+```
+
+---
+
+### Execução
+
+```
+node server.js
+python ml_api.py
+```
+
+---
+
+## 10. Deploy (Render)
+
+### Node.js
+
+* Build: npm install
+* Start: node server.js
+
+### Python
+
+* Build: pip install -r requirements.txt
+* Start: gunicorn ml_api:app
+
+---
+
+## 11. Problemas Comuns
+
+### MySQL não conecta
+
+* Verificar .env
+* Banco ativo
+* Credenciais
+
+---
+
+### API Python falha
+
+* Verificar URL
+* Logs do Render
+
+---
+
+### JWT inválido
+
+* Token expirado
+* JWT_SECRET incorreto
+
+---
+
+### Upload falha
+
+* Permissão de pasta
+* limite 5MB
+
+---
+
+## 12. Acesso ao Sistema
+
+### URLs
+
+* Produção: [https://trilha-academica-api.onrender.com](https://trilha-academica-api.onrender.com)
+
+---
+
+### Contas
+
+* [admin@admin.com](mailto:admin@admin.com) / admin123
+* [teste@email.com](mailto:teste@email.com) / 123456
+* [ana.silva@email.com](mailto:ana.silva@email.com) / admin123
+* [bruno.lima@email.com](mailto:bruno.lima@email.com) / admin123
+* [carla.santos@email.com](mailto:carla.santos@email.com) / admin123
+
+---
+
+## 13. Funcionalidades
+
+* Login/cadastro
+* Questionário
+* Recomendação IA
+* Cursos
+* Progresso
+* Conquistas
+* Dashboard
+* PDF currículo
+* Admin panel
+
+---
+
+## 14. Boas Práticas
+
+* Arquitetura modular
+* Separação frontend/backend
+* JWT autenticação
+* Variáveis de ambiente
+* API desacoplada ML
+* Pool de conexões
+
+---
+
+## 15. Melhorias Futuras
+
+* Refresh token
+* OAuth login
+* Dark mode
+* PWA
+* Certificados
+* CI/CD
+* Docker
+
+---
+
+## 16. Conclusão
+
+Este documento serve como base completa do sistema Trilha Acadêmica, facilitando manutenção, evolução e escalabilidade.
+
+-
