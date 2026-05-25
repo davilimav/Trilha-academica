@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Trilha Acadêmica</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/trilha-global.css">
+    <style>
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo img {
+            height: 50px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 30px auto;
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .profile {
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .profile .pro {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 12px;
+            border: 3px solid var(--cor-primaria);
+            cursor: pointer;
+        }
+
+        .sidebar-padrao ul {
+            list-style: none;
+        }
+
+        .sidebar-padrao li {
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .sidebar-padrao li:hover {
+            background: #f3f4f6;
+        }
+
+        .sidebar-padrao li.active {
+            background: var(--cor-primaria);
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--sombra-suave);
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            color: var(--cor-primaria);
+            margin-bottom: 10px;
+        }
+
+        .recomendacoes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .recomendacao-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--sombra-suave);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .recomendacao-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .recomendacao-card .header {
+            background: var(--cor-primaria);
+            color: white;
+            padding: 15px;
+        }
+
+        .recomendacao-card .body {
+            padding: 20px;
+        }
+
+        .similaridade {
+            display: inline-block;
+            background: #e5e7eb;
+            color: var(--cor-primaria);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .proximo-curso-card {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .proximo-curso-card h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
+        .btn-proximo {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .btn-curriculo {
+            background: var(--cor-secundaria);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header-padrao">
+        <div class="logo"><img src="imagens/index/Logo1.jpeg" alt="Logo"><span>Trilha Acadêmica</span></div>
+        <nav style="display: flex; gap: 30px;">
+            <a href="dashboard.html" style="color: white; text-decoration: none;">Dashboard</a>
+            <a href="cursos.html" style="color: white; text-decoration: none;">Cursos</a>
+            <a href="questionario.html" style="color: white; text-decoration: none;">Questionário</a>
+        </nav>
+        <button class="btn-outline" id="btnSair" style="background: white;">Sair</button>
+    </header>
+
+    <main class="container">
+        <aside class="sidebar-padrao">
+            <div class="profile">
+                <img class="pro" id="profileImage" src="https://via.placeholder.com/100" alt="Perfil"
+                    onclick="abrirModalFoto()">
+                <h3 id="userName">Carregando...</h3>
+                <p id="userEmail">carregando@email.com</p>
+                <button class="btn-curriculo" onclick="window.location.href='perfil-completo.html'">
+                    📄 Meu Currículo
+                </button>
+            </div>
+            <ul>
+                <li class="active" data-tab="dashboard">Dashboard</li>
+                <li data-tab="recomendacoes">Recomendações</li>
+                <li data-tab="config">Configurações</li>
+            </ul>
+        </aside>
+
+        <section class="content" id="conteudoDashboard">
+            <h1>Dashboard</h1>
+            <p class="desc">Bem-vindo ao seu painel de controle.</p>
+
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <h3 id="statsPontos">0</h3>
+                    <p>⭐ Pontos</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statsCursos">0</h3>
+                    <p>✅ Cursos Concluídos</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statsHoras">0</h3>
+                    <p>⏱️ Horas Estudadas</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statsNivel">0</h3>
+                    <p>🎯 Nível</p>
+                </div>
+            </div>
+
+            <div class="recomendacoes-grid" id="ultimasRecomendacoes">
+                <div class="loading">Carregando recomendações...</div>
+            </div>
+
+            <div id="proximoCursoContainer" class="proximo-curso-card" style="display: none;">
+                <h3>🎯 Próximo Curso Recomendado</h3>
+                <p id="proximoCursoNome">Carregando...</p>
+                <p id="proximoCursoNivel"></p>
+                <button class="btn-proximo" onclick="irParaProximoCurso()">🔍 Ver Curso</button>
+            </div>
+        </section>
+
+        <section class="content" id="conteudoRecomendacoes" style="display:none;">
+            <h1>Minhas Recomendações</h1>
+            <div id="todasRecomendacoes" class="recomendacoes-grid"></div>
+        </section>
+
+        <section class="content" id="conteudoConfig" style="display:none;">
+            <h1>Configurações</h1>
+            <div class="card">
+                <button class="btn-primario" onclick="abrirModalFoto()">📸 Alterar Foto de Perfil</button>
+                <button class="btn-outline" onclick="refazerQuestionario()" style="margin-top: 15px;">🔄 Refazer
+                    Questionário</button>
+            </div>
+        </section>
+    </main>
+
+    <div id="modalFoto" class="modal">
+        <div class="modal-content">
+            <h3>Alterar Foto</h3>
+            <input type="file" id="fotoInput" accept="image/*" style="margin: 20px 0;">
+            <button class="btn-primario" onclick="salvarFoto()">Salvar</button>
+            <button class="btn-outline" onclick="fecharModalFoto()">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+
+        const API_AUTH = 'https://trilha-academica-api.onrender.com/api/auth';
+        const API_REC = 'https://trilha-academica-api.onrender.com/api/recomendacao';
+        const API_PROGRESSO = 'https://trilha-academica-api.onrender.com/api/progresso';
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let proximoCursoNome = null;
+
+        if (!token) window.location.href = 'login.html';
+
+        async function carregarPerfil() {
+            try {
+                const response = await fetch(`${API_AUTH}/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.status === 401) { localStorage.clear(); window.location.href = 'login.html'; return; }
+                const data = await response.json();
+                if (data.user) {
+                    user = data.user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    document.getElementById('userName').textContent = user.name;
+                    document.getElementById('userEmail').textContent = user.email;
+                    if (user.foto_url) document.getElementById('profileImage').src = user.foto_url + '?t=' + Date.now();
+                }
+            } catch (error) { console.error(error); }
+        }
+
+        async function carregarProgresso() {
+            try {
+                const response = await fetch(`${API_PROGRESSO}/meu-progresso`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const progresso = data.progresso || {};
+                    const cursosConcluidos = data.cursos_concluidos || [];
+
+                    document.getElementById('statsPontos').textContent = progresso.pontos_total || 0;
+                    document.getElementById('statsCursos').textContent = cursosConcluidos.length;
+                    document.getElementById('statsHoras').textContent = progresso.horas_estudadas || 0;
+
+                    let nivelTexto = '';
+                    let nivelNum = progresso.nivel_atual || 1;
+                    if (nivelNum === 1) nivelTexto = '🌱 Iniciante';
+                    else if (nivelNum === 2) nivelTexto = '📘 Intermediário';
+                    else nivelTexto = '🚀 Avançado';
+                    document.getElementById('statsNivel').textContent = nivelTexto;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar progresso:', error);
+            }
+        }
+
+        async function carregarRecomendacoes() {
+            try {
+                const response = await fetch(`${API_REC}/recomendacoes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.recomendacoes?.length) {
+                    const html = data.recomendacoes.slice(0, 3).map(rec => `
+                        <div class="recomendacao-card" onclick="alert('📚 ${rec.trilha}\n\n${rec.descricao}\n\n⏱️ Duração: ${rec.duracao}')">
+                            <div class="header"><h3>${rec.trilha}</h3></div>
+                            <div class="body">
+                                <p>${rec.descricao.substring(0, 100)}...</p>
+                                <span class="similaridade">🎯 ${rec.similaridade}% compatível</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('ultimasRecomendacoes').innerHTML = html;
+                    document.getElementById('todasRecomendacoes').innerHTML = data.recomendacoes.map(rec => `
+                        <div class="recomendacao-card" onclick="alert('${rec.trilha}\n\n${rec.descricao}')">
+                            <div class="header"><h3>${rec.trilha}</h3></div>
+                            <div class="body"><p>${rec.descricao}</p></div>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('ultimasRecomendacoes').innerHTML = '<div class="loading">Nenhuma recomendação ainda. Responda o questionário!</div>';
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('ultimasRecomendacoes').innerHTML = '<div class="loading">Erro ao carregar recomendações</div>';
+            }
+        }
+
+        async function carregarProximoCurso() {
+            try {
+                const response = await fetch(`${API_PROGRESSO}/proximo-curso`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.proximo_curso) {
+                    proximoCursoNome = data.proximo_curso;
+                    document.getElementById('proximoCursoContainer').style.display = 'block';
+                    document.getElementById('proximoCursoNome').innerHTML = `<strong>${data.proximo_curso}</strong>`;
+
+                    let nivelTexto = '';
+                    if (data.nivel_atual === 1) nivelTexto = '🌱 Nível Iniciante';
+                    else if (data.nivel_atual === 2) nivelTexto = '📘 Nível Intermediário';
+                    else nivelTexto = '🚀 Nível Avançado';
+                    document.getElementById('proximoCursoNivel').innerHTML = `${nivelTexto} | ${data.total_concluidos} cursos concluídos`;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar próximo curso:', error);
+            }
+        }
+
+        function irParaProximoCurso() {
+            if (proximoCursoNome) {
+                window.location.href = `cursos.html?buscar=${encodeURIComponent(proximoCursoNome)}`;
+            }
+        }
+
+        function refazerQuestionario() {
+            if (confirm('⚠️ Isso vai APAGAR suas respostas atuais e você precisará responder tudo novamente.\n\nDeseja continuar?')) {
+                window.location.href = 'questionario.html?refazer=true';
+            }
+        }
+
+        function abrirModalFoto() { document.getElementById('modalFoto').style.display = 'flex'; }
+        function fecharModalFoto() { document.getElementById('modalFoto').style.display = 'none'; }
+
+        async function salvarFoto() {
+            const file = document.getElementById('fotoInput').files[0];
+            if (!file) return alert('Selecione uma imagem');
+            const formData = new FormData();
+            formData.append('foto', file);
+            const response = await fetch(`${API_AUTH}/upload-foto`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('profileImage').src = data.foto_url + '?t=' + Date.now();
+                fecharModalFoto();
+                alert('Foto atualizada!');
+            }
+        }
+
+        document.querySelectorAll('.sidebar-padrao li').forEach(li => {
+            li.addEventListener('click', function () {
+                document.querySelectorAll('.sidebar-padrao li').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                const tab = this.dataset.tab;
+                document.getElementById('conteudoDashboard').style.display = tab === 'dashboard' ? 'block' : 'none';
+                document.getElementById('conteudoRecomendacoes').style.display = tab === 'recomendacoes' ? 'block' : 'none';
+                document.getElementById('conteudoConfig').style.display = tab === 'config' ? 'block' : 'none';
+            });
+        });
+
+        document.getElementById('btnSair').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+
+        // Iniciar
+        carregarPerfil();
+        carregarProgresso();
+        carregarRecomendacoes();
+        carregarProximoCurso();
+    </script>
+</body>
+
+</html>

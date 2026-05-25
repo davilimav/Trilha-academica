@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trilha Acadêmica - Sua jornada de aprendizado</title>
+  <link rel="stylesheet" href="css/trilha-global.css">
+  <link rel="icon" href="imagens/index/logo.png">
+<link rel="shortcut icon" href="imagens/index/logo.png">
+
+
+  <style>
+    .hero {
+      width: 100%;
+      padding: 80px 0;
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    }
+
+    .hero-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 50px;
+      flex-wrap: wrap;
+      overflow: hidden;
+    }
+
+    .hero-text {
+      flex: 1 1 500px;
+      max-width: 500px;
+      min-width: 0;
+    }
+
+    .hero-text h1 {
+      font-size: 48px;
+      color: #1a2b49;
+      margin-bottom: 20px;
+    }
+
+    .hero-text p {
+      color: #555;
+      margin-bottom: 30px;
+      font-size: 18px;
+    }
+
+    .hero-img {
+      flex: 0 1 520px;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero-img img {
+      max-width: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .hero {
+      width: 100%;
+      padding: 80px 0;
+      background: url("imagens/index/hero.jpeg") no-repeat center center;
+      background-size: cover;
+    }
+
+    .features {
+      text-align: center;
+      padding: 80px 40px;
+      background: white;
+    }
+
+    .features h2 {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .features>p {
+      color: #6b7280;
+      margin-bottom: 50px;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card-feature {
+      background: white;
+      padding: 30px 25px;
+      width: 260px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      transition: 0.3s;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .card-feature:hover {
+      transform: translateY(-8px);
+    }
+
+    .card-feature img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+    }
+
+    .cta-final {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo img {
+      height: 90px;
+      vertical-align: middle;
+    }
+
+    .auth {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    .header-padrao {
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .header-padrao > * {
+      min-width: 0;
+    }
+
+    header nav {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .header-padrao .auth a {
+      min-width: 140px;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-container {
+        width: 100%;
+        padding: 0 20px;
+      }
+
+      .hero-text,
+      .hero-img {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+
+      .hero-img {
+        margin-top: 30px;
+      }
+
+      .header-padrao {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        gap: 16px;
+      }
+
+      .header-padrao nav,
+      .header-padrao .auth {
+        justify-content: center;
+      }
+
+      .header-padrao .auth {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-container {
+        padding: 0 20px;
+        gap: 30px;
+      }
+
+      .hero-text {
+        max-width: 100%;
+        text-align: center;
+      }
+
+      .hero-text h1 {
+        font-size: 32px;
+      }
+
+      .hero-text button {
+        margin: 0 auto;
+      }
+
+      .hero {
+        padding: 60px 0;
+      }
+
+      .hero-img {
+        max-width: 100%;
+      }
+
+      .auth {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+
+      .auth a {
+        width: 100%;
+      }
+
+      .auth a button {
+        width: 100%;
+      }
+
+      nav {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-container {
+        padding: 0 16px;
+        gap: 20px;
+      }
+
+      .hero {
+        padding: 50px 0;
+      }
+
+      .card-feature {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .features,
+      .about {
+        padding: 60px 20px;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logo img {
+        height: 70px;
+      }
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    section {
+      scroll-margin-top: 100px;
+    }
+
+    .nav-link {
+      position: relative;
+
+      text-decoration: none;
+      color: #333;
+
+      font-weight: 500;
+
+      transition:
+        color 0.3s ease;
+    }
+
+    .nav-link::after {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      bottom: -5px;
+
+      width: 0%;
+      height: 2px;
+
+      background: var(--cor-primaria);
+
+      transition:
+        width 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--cor-primaria);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .footer {
+      width: 100%;
+      padding: 90px 20px;
+
+      background: url("imagens/index/fundo.jpeg") no-repeat center;
+      background-size: cover;
+
+      text-align: center;
+    }
+
+    .footer-content h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    #finalCta {
+  color: var(--cor-primaria);
+  font-weight: 800;
+  text-decoration: none;
+
+  position: relative;
+}
+
+#finalCta::after {
+  content: "";
+  position: absolute;
+
+  left: 0;
+  bottom: -4px;
+
+  width: 100%;
+  height: 2px;
+
+  background: var(--cor-primaria);
+
+  transform: scaleX(0);
+  transform-origin: left;
+
+  transition: transform 0.3s ease;
+}
+
+#finalCta:hover::after {
+  transform: scaleX(1);
+}
+
+.about {
+  padding: 100px 20px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.about-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.about h2 {
+  font-size: 32px;
+  color: var(--texto-principal);
+  margin-bottom: 10px;
+}
+
+.about-intro {
+  color: var(--texto-secundario);
+  margin-bottom: 50px;
+  font-size: 18px;
+}
+
+/* GRID */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+/* CARDS */
+.about-card {
+  background: var(--fundo-card);
+  padding: 25px;
+  border-radius: var(--borda-raio-lg);
+  box-shadow: var(--sombra-suave);
+  transition: transform 0.3s ease;
+  text-align: left;
+}
+
+.about-card:hover {
+  transform: translateY(-5px);
+}
+
+.about-card h3 {
+  margin-bottom: 10px;
+  color: var(--texto-principal);
+}
+
+.about-card p {
+  color: var(--texto-secundario);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+}
+  </style>
+</head>
+
+<body>
+
+  <header class="header-padrao">
+    <div class="logo">
+      <img src="imagens/index/Logo1.jpeg" alt="Logo">
+    </div>
+
+    <nav style="display: flex; gap: 30px;">
+      <a href="#home" class="nav-link">Home</a>
+      <a href="#trilhas" class="nav-link">Trilhas</a>
+      <a href="#sobre" class="nav-link">Sobre</a>
+    </nav>
+
+    <div class="auth" id="authButtons">
+      <a href="login.html">
+        <button class="btn-outline">Login</button>
+      </a>
+
+      <a href="cadastro.html">
+        <button class="btn-primario">Cadastrar</button>
+      </a>
+    </div>
+  </header>
+
+  <Main>
+    <section class="hero" id="home">
+      <div class="hero-container">
+        <div class="hero-text">
+          <h1>Encontre sua trilha acadêmica ideal</h1>
+
+          <p>
+            Descubra as melhores trilhas de aprendizado personalizadas.
+          </p>
+
+          <button class="btn-primario" id="ctaButton" style="font-size: 16px; padding: 14px 32px;">
+            Comece Agora
+          </button>
+        </div>
+
+        <div class="hero-img">
+          <img src="imagens/index/Meio.png" alt="Estudante">
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="trilhas">
+      <h2>Descubra tudo que a Trilha Acadêmica oferece!</h2>
+
+      <p>
+        Receba recomendações baseadas nos seus interesses.
+      </p>
+
+      <div class="cards">
+        <div class="card-feature" data-card="sugestoes">
+          <img src="imagens/index/card1.jpeg" alt="Sugestões">
+
+          <h3>Sugestões Personalizadas</h3>
+
+          <p>Recomendações baseadas no seu perfil.</p>
+        </div>
+
+        <div class="card-feature" data-card="areas">
+          <img src="imagens/index/card2.jpeg" alt="Áreas">
+
+          <h3>Áreas de Conhecimento</h3>
+
+          <p>Explore diversas áreas para sua carreira.</p>
+        </div>
+
+        <div class="card-feature" data-card="disciplinas">
+          <img src="imagens/index/card3.jpeg" alt="Disciplinas">
+
+          <h3>Guia de Disciplinas</h3>
+
+          <p>Acompanhe seu progresso.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="about" id="sobre">
+      <div class="about-container">
+    
+        <h2>Sobre a Trilha Acadêmica</h2>
+    
+        <p class="about-intro">
+          Uma plataforma pensada para orientar estudantes na escolha de suas trilhas de aprendizado.
+        </p>
+    
+        <div class="about-grid">
+    
+          <div class="about-card">
+            <h3>🎯 Direcionamento</h3>
+            <p>Encontre caminhos de estudo alinhados com seus interesses e objetivos profissionais.</p>
+          </div>
+    
+          <div class="about-card">
+            <h3>📚 Organização</h3>
+            <p>Visualize disciplinas e áreas de forma clara e estruturada.</p>
+          </div>
+    
+          <div class="about-card">
+            <h3>🚀 Evolução</h3>
+            <p>Desenvolva sua trajetória acadêmica de forma contínua e estratégica.</p>
+          </div>
+    
+        </div>
+    
+      </div>
+    </section>
+  </Main>
+
+  <footer class="footer" id="sobre">
+    <div class="footer-content">
+      <h2>
+        Comece sua jornada
+        <a href="cadastro.html" id="finalCta">agora</a>
+      </h2>
+    </div>
+  </footer>
+
+
+  <script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const authContainer = document.getElementById('authButtons');
+
+    function atualizarBotoes() {
+      if (token && user.name) {
+        authContainer.innerHTML = `
+                <span style="color: var(--cor-primaria);">Olá, ${user.name.split(' ')[0]}</span>
+                <button class="btn-outline" id="btnDashboard">Dashboard</button>
+                <button class="btn-primario" id="btnLogout">Sair</button>
+            `;
+        document.getElementById('btnDashboard')?.addEventListener('click', () => window.location.href = 'dashboard.html');
+        document.getElementById('btnLogout')?.addEventListener('click', () => { localStorage.clear(); window.location.reload(); });
+      }
+    }
+
+    function handleCtaClick() { window.location.href = token && user.name ? 'dashboard.html' : 'cadastro.html'; }
+    document.getElementById('ctaButton')?.addEventListener('click', handleCtaClick);
+    document.getElementById('finalCta')?.addEventListener('click', (e) => { e.preventDefault(); handleCtaClick(); });
+    atualizarBotoes();
+  </script>
+</body>
+
+</html>

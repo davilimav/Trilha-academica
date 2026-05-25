@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questionário - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/trilha-global.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--cor-secundaria) 0%, var(--cor-primaria) 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .questionario-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header-questionario {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-questionario h1 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header-questionario p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: white;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .card-pergunta {
+            background: white;
+            border-radius: var(--borda-raio-2xl);
+            padding: 35px;
+            box-shadow: var(--sombra-forte);
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .card-pergunta.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--borda-raio-md);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            border-color: var(--cor-secundaria);
+            background: #f5f3ff;
+        }
+
+        .option.selected {
+            border-color: var(--cor-secundaria);
+            background: #ede9fe;
+        }
+
+        .option-radio {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            position: relative;
+        }
+
+        .option.selected .option-radio {
+            border-color: var(--cor-secundaria);
+        }
+
+        .option.selected .option-radio::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--cor-secundaria);
+        }
+
+        .cursos-container {
+            margin-top: 25px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            display: none;
+        }
+
+        .cursos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .curso-item {
+            padding: 10px 12px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .curso-item:hover {
+            background: #ede9fe;
+        }
+
+        .curso-item.selected {
+            background: var(--cor-secundaria);
+            color: white;
+        }
+
+        .curso-item .check {
+            opacity: 0;
+            font-weight: bold;
+        }
+
+        .curso-item.selected .check {
+            opacity: 1;
+        }
+
+        .loading-salvando {
+            text-align: center;
+            padding: 60px;
+            color: white;
+            font-size: 1.2rem;
+            display: none;
+        }
+
+        .btn-refazer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--cor-laranja);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: var(--sombra-media);
+            z-index: 100;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .card-pergunta {
+                padding: 20px;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="questionario-container">
+        <div class="header-questionario">
+            <h1>🎓 Escolha sua Trilha Acadêmica</h1>
+            <p>Selecione as áreas de interesse e os cursos que você quer fazer</p>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div id="loading" class="loading-salvando">
+            <div>💾 Salvando suas preferências...</div>
+        </div>
+        <div id="questionarioContainer"></div>
+    </div>
+
+    <button class="btn-refazer" id="btnRefazer" style="display: none;">🔄 Refazer Questionário</button>
+
+    <script>
+        const NODE_API = 'https://trilha-academica-api.onrender.com/api';
+        const token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // =====================================================
+        // ÁREAS E CURSOS (VERSÃO CORRIGIDA - SEM UNDEFINED)
+        // =====================================================
+        const areas = [
+            {
+                id: "ti",
+                nome: "Tecnologia da Informação (TI)",
+                icone: "💻",
+                cursos: [
+                    "Desenvolvimento Web Front-end",
+                    "Desenvolvimento Web Back-end",
+                    "Desenvolvimento Mobile",
+                    "Banco de Dados",
+                    "Cloud Computing",
+                    "DevOps",
+                    "Inteligência Artificial",
+                    "Ciência de Dados",
+                    "UX/UI Design"
+                ]
+            },
+            {
+                id: "programacao",
+                nome: "Programação Avançada",
+                icone: "⚙️",
+                cursos: [
+                    "JavaScript/TypeScript",
+                    "Python para Backend",
+                    "Java Spring Boot",
+                    "C# .NET",
+                    "Algoritmos e Estruturas",
+                    "Design Patterns",
+                    "Clean Code",
+                    "Testes Automatizados",
+                    "API RESTful"
+                ]
+            },
+            {
+                id: "dados",
+                nome: "Ciência de Dados",
+                icone: "📊",
+                cursos: [
+                    "Python para Dados",
+                    "SQL Avançado",
+                    "Machine Learning",
+                    "Power BI",
+                    "Estatística Aplicada",
+                    "Data Visualization",
+                    "Análise de Dados"
+                ]
+            },
+            {
+                id: "design",
+                nome: "Design Digital",
+                icone: "🎨",
+                cursos: [
+                    "UX/UI Design",
+                    "Figma",
+                    "Design System",
+                    "Product Design",
+                    "Motion Design",
+                    "Design Thinking",
+                    "UX Research"
+                ]
+            },
+            {
+                id: "seguranca",
+                nome: "Segurança Digital",
+                icone: "🔒",
+                cursos: [
+                    "Ethical Hacking",
+                    "Segurança de Redes",
+                    "Criptografia",
+                    "DevSecOps",
+                    "OWASP Top 10",
+                    "Segurança em Nuvem"
+                ]
+            },
+            {
+                id: "marketing",
+                nome: "Marketing Digital",
+                icone: "📈",
+                cursos: [
+                    "SEO Avançado",
+                    "Google Ads",
+                    "Social Media",
+                    "Email Marketing",
+                    "Content Marketing",
+                    "Inbound Marketing",
+                    "Growth Hacking"
+                ]
+            }
+        ];
+
+        let respostas = {};
+        let cursosSelecionados = {};
+        let areaAtual = 0;
+        let jaRespondeu = false;
+
+        // Inicializar
+        areas.forEach(area => {
+            respostas[area.id] = null;  // null = não respondido ainda
+            cursosSelecionados[area.id] = [];
+        });
+
+        // =====================================================
+        // VERIFICAR SE JÁ RESPONDEU O QUESTIONÁRIO
+        // =====================================================
+                async function verificarQuestionarioRespondido() {
+            try {
+                console.log('🔍 Verificando se usuário já respondeu questionário...');
+        
+                const response = await fetch(`${NODE_API}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+        
+                console.log('📋 Dados do usuário:', data.user);
+        
+                // CORREÇÃO: Aceita tanto true quanto 1
+                const jaRespondeuQuest = (data.user && (data.user.questionario_respondido === true || data.user.questionario_respondido === 1));
+                
+                if (jaRespondeuQuest) {
+                    jaRespondeu = true;
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const isRefazendo = urlParams.get('refazer') === 'true';
+        
+                    console.log('✅ Usuário JÁ respondeu. Refazendo?', isRefazendo);
+        
+                    if (!isRefazendo) {
+                        // REDIRECIONA DIRETO PARA O DASHBOARD
+                        window.location.href = 'dashboard.html';
+                        return false;
+                    } else {
+                        document.getElementById('btnRefazer').style.display = 'block';
+                        renderizarPerguntas();
+                        return true;
+                    }
+                }
+        
+                console.log('📝 Usuário NÃO respondeu ainda. Mostrando questionário...');
+                renderizarPerguntas();
+                return true;
+        
+            } catch (error) {
+                console.error('❌ Erro ao verificar:', error);
+                renderizarPerguntas();
+                return true;
+            }
+        }
+        
+        function refazerQuestionario() {
+            if (confirm('⚠️ Isso vai APAGAR suas respostas atuais.\n\nDeseja realmente refazer o questionário?')) {
+                window.location.href = 'questionario.html?refazer=true';
+            }
+        }
+
+        function irParaDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        function renderizarPerguntas() {
+            const container = document.getElementById('questionarioContainer');
+
+            if (areas.length === 0) {
+                container.innerHTML = '<div class="alert-warning">Erro: Nenhuma área disponível</div>';
+                return;
+            }
+
+            container.innerHTML = areas.map((area, idx) => `
+                <div class="card-pergunta" data-pergunta="${idx}">
+                    <div class="question-icon">${area.icone || '📚'}</div>
+                    <div class="question-text">Você tem interesse na área de ${area.nome || '?'}?</div>
+                    <div class="options" data-id="${area.id}">
+                        <div class="option ${respostas[area.id] === 1 ? 'selected' : ''}" data-valor="1">
+                            <div class="option-radio"></div>
+                            <div class="option-label">✅ Sim, tenho interesse</div>
+                        </div>
+                        <div class="option ${respostas[area.id] === 0 ? 'selected' : ''}" data-valor="0">
+                            <div class="option-radio"></div>
+                            <div class="option-label">❌ Não tenho interesse</div>
+                        </div>
+                    </div>
+                    <div class="cursos-container" id="cursos-${area.id}" style="display: ${respostas[area.id] === 1 ? 'block' : 'none'}">
+                        <div class="cursos-titulo" style="font-weight: 600; margin-bottom: 15px;">📚 Quais cursos te interessam em ${area.nome || '?'}?</div>
+                        <div class="cursos-grid" id="grid-${area.id}"></div>
+                    </div>
+                    <div class="nav-buttons" style="display: flex; justify-content: space-between; margin-top: 25px;">
+                        ${idx > 0 ? `<button class="btn-outline" onclick="perguntaAnterior()">← Voltar</button>` : '<div></div>'}
+                        ${idx < areas.length - 1 ?
+                    `<button class="btn-primario" onclick="proximaPergunta()">Próxima →</button>` :
+                    `<button class="btn-primario" onclick="enviarRespostas()">Concluir →</button>`}
+                    </div>
+                </div>
+            `).join('');
+
+            // Adicionar eventos para as opções Sim/Não
+            areas.forEach((area, idx) => {
+                const card = document.querySelector(`.card-pergunta[data-pergunta="${idx}"]`);
+                if (card) {
+                    const options = card.querySelectorAll('.option');
+                    options.forEach(opt => {
+                        opt.addEventListener('click', () => {
+                            const valor = parseInt(opt.dataset.valor);
+                            const areaId = area.id;
+                            respostas[areaId] = valor;
+
+                            const cursosContainer = document.getElementById(`cursos-${areaId}`);
+                            if (valor === 1) {
+                                cursosContainer.style.display = 'block';
+                                carregarCursos(area);
+                            } else {
+                                cursosContainer.style.display = 'none';
+                                cursosSelecionados[areaId] = [];
+                            }
+
+                            options.forEach(o => o.classList.remove('selected'));
+                            opt.classList.add('selected');
+                        });
+                    });
+
+                    // Carregar cursos se já estiver selecionado
+                    if (respostas[area.id] === 1) {
+                        carregarCursos(area);
+                    }
+                }
+            });
+
+            mostrarPergunta(0);
+        }
+
+        function carregarCursos(area) {
+            const grid = document.getElementById(`grid-${area.id}`);
+            if (!grid || !area.cursos) return;
+
+            const selecionados = cursosSelecionados[area.id] || [];
+
+            grid.innerHTML = area.cursos.map(curso => `
+                <div class="curso-item ${selecionados.includes(curso) ? 'selected' : ''}" data-curso="${curso.replace(/'/g, "\\'")}">
+                    <span>📖 ${curso}</span>
+                    <span class="check">✓</span>
+                </div>
+            `).join('');
+
+            document.querySelectorAll(`#grid-${area.id} .curso-item`).forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const curso = item.dataset.curso;
+                    const selecionadosAtuais = cursosSelecionados[area.id] || [];
+                    const index = selecionadosAtuais.indexOf(curso);
+                    if (index === -1) {
+                        selecionadosAtuais.push(curso);
+                        item.classList.add('selected');
+                    } else {
+                        selecionadosAtuais.splice(index, 1);
+                        item.classList.remove('selected');
+                    }
+                    cursosSelecionados[area.id] = selecionadosAtuais;
+                });
+            });
+        }
+
+        function mostrarPergunta(idx) {
+            const cards = document.querySelectorAll('.card-pergunta');
+            cards.forEach((card, i) => {
+                if (i === idx) card.classList.add('active');
+                else card.classList.remove('active');
+            });
+            const progress = ((idx + 1) / areas.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            areaAtual = idx;
+        }
+
+        function proximaPergunta() {
+            const areaId = areas[areaAtual].id;
+            if (respostas[areaId] === null) {
+                alert('Por favor, selecione uma opção antes de continuar.');
+                return;
+            }
+            if (areaAtual < areas.length - 1) {
+                mostrarPergunta(areaAtual + 1);
+            }
+        }
+
+        function perguntaAnterior() {
+            if (areaAtual > 0) {
+                mostrarPergunta(areaAtual - 1);
+            }
+        }
+
+        async function enviarRespostas() {
+            // Verificar se todas foram respondidas
+            for (const area of areas) {
+                if (respostas[area.id] === null) {
+                    alert(`Por favor, responda se você tem interesse em ${area.nome}`);
+                    const index = areas.findIndex(a => a.id === area.id);
+                    mostrarPergunta(index);
+                    return;
+                }
+            }
+
+            document.getElementById('questionarioContainer').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            const areasInteresse = [];
+            for (const area of areas) {
+                if (respostas[area.id] === 1) {
+                    areasInteresse.push({
+                        area: area.nome,
+                        cursos: cursosSelecionados[area.id] || []
+                    });
+                }
+            }
+
+            console.log('📤 Enviando:', areasInteresse);
+
+            try {
+                const saveResponse = await fetch(`${NODE_API}/recomendacao/respostas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ areas_interesse: areasInteresse })
+                });
+
+                const saveData = await saveResponse.json();
+                console.log('📥 Resposta:', saveData);
+
+                if (saveData.success) {
+                    await fetch(`${NODE_API}/auth/marcar-questionario`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error(saveData.error || 'Erro ao salvar');
+                }
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                alert('Erro ao salvar. Tente novamente.');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('questionarioContainer').style.display = 'block';
+            }
+        }
+
+        // Refazer questionário
+        document.getElementById('btnRefazer')?.addEventListener('click', refazerQuestionario);
+
+        // Iniciar
+        verificarQuestionarioRespondido();
+    </script>
+</body>
+
+</html>

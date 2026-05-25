@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Curso - Trilha Acadêmica</title>
+    <link rel="stylesheet" href="css/trilha-global.css">
+    <style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .curso-card {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        color: #1f2937;
+    }
+
+    .curso-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    h1 {
+        color: #111827 !important;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    h3 {
+        color: #111827 !important;
+        font-weight: 600;
+        margin-top: 20px;
+        margin-bottom: 15px;
+    }
+
+    .info {
+        background: #f3f4f6;
+        padding: 20px;
+        border-radius: 16px;
+        margin: 20px 0;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-item span:first-child {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .info-item span:last-child {
+        color: #111827;
+        font-weight: 600;
+    }
+
+    .topicos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .topico {
+        background: #e0e7ff;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        color: #1e3a8a;
+        font-weight: 500;
+    }
+
+    .btn-concluir {
+        background: #16a34a;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        width: 100%;
+        margin-top: 20px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+
+    .btn-concluir:hover {
+        background: #15803d;
+        transform: translateY(-2px);
+    }
+
+    .btn-concluir:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .btn-concluir.concluido {
+        background: #9ca3af;
+    }
+
+    .mensagem-sucesso {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        display: none;
+        text-align: center;
+    }
+
+    .proximo-curso {
+        margin-top: 30px;
+        padding: 20px;
+        background: #fef3c7;
+        border-radius: 16px;
+        display: none;
+        text-align: center;
+    }
+
+    .proximo-curso h4 {
+        color: #92400e;
+        margin-bottom: 10px;
+    }
+
+    .btn-proximo {
+        background: #f59e0b;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    .btn-voltar {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .btn-voltar:hover {
+        background: #5a67d8;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: white;
+    }
+
+    .conquista-badge {
+        display: inline-block;
+        background: #fbbf24;
+        color: #92400e;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+</style>
+
+    
+</head>
+
+<body>
+    <div class="container">
+        <div id="detalhesContainer" class="loading">Carregando detalhes do curso...</div>
+        <div id="mensagemSucesso" class="mensagem-sucesso"></div>
+        <div id="proximoCurso" class="proximo-curso"></div>
+        <button class="btn-voltar" onclick="window.location.href='cursos.html'">← Voltar para Cursos</button>
+    </div>
+
+    <script>
+        const API_URL = 'https://trilha-academica-api.onrender.com/api';
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const area = urlParams.get('area');
+        const subarea = urlParams.get('subarea');
+        const nivel = urlParams.get('nivel');
+        const curso = decodeURIComponent(urlParams.get('curso') || '');
+
+        let jaConcluiu = false;
+
+        async function carregarDetalhes() {
+            try {
+                // Buscar dados do curso
+                const response = await fetch(`${API_URL}/cursos/areas/${area}/subareas/${subarea}/${nivel}/${encodeURIComponent(curso)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const cursoData = await response.json();
+
+                let nivelClass = '';
+                let nivelCor = '';
+                let nivelTexto = '';
+                if (nivel === 'Iniciante') { nivelClass = '🌱'; nivelCor = '#0369a1'; nivelTexto = 'Iniciante'; }
+                else if (nivel === 'Intermediário') { nivelClass = '📘'; nivelCor = '#b45309'; nivelTexto = 'Intermediário'; }
+                else { nivelClass = '🚀'; nivelCor = '#15803d'; nivelTexto = 'Avançado'; }
+
+                // Conteúdo adicional do curso
+                const conteudoCurso = {
+                    "React.js": { topicos: ["Componentes", "Hooks", "Context API", "Redux", "Next.js"], projetos: ["E-commerce", "Dashboard"] },
+                    "Node.js com TypeScript": { topicos: ["TypeScript", "Express", "JWT", "Prisma", "Testes"], projetos: ["API REST", "Sistema Auth"] },
+                    "Machine Learning com Python": { topicos: ["Pandas", "Scikit-learn", "Regressão", "Classificação"], projetos: ["Previsão de Preços"] }
+                };
+
+                const conteudo = conteudoCurso[curso] || {
+                    topicos: ["Fundamentos", "Prática", "Projetos", "Certificação"],
+                    projetos: ["Projeto Final", "Portfólio"]
+                };
+
+                document.getElementById('detalhesContainer').innerHTML = `
+                    <div class="curso-card">
+                        <div class="curso-icon">📚</div>
+                        <h1>${curso}</h1>
+                        
+                        <div class="info">
+                            <div class="info-item"><span>📂 Área</span><span>${decodeURIComponent(area)}</span></div>
+                            <div class="info-item"><span>📁 Subárea</span><span>${decodeURIComponent(subarea)}</span></div>
+                            <div class="info-item"><span>🎯 Nível</span><span style="color: ${nivelCor}">${nivelClass} ${nivel}</span></div>
+                            <div class="info-item"><span>⏱️ Duração</span><span>${cursoData.duracao || '30h'}</span></div>
+                            <div class="info-item"><span>📜 Certificado</span><span>${cursoData.certificado ? '✅ Sim' : '❌ Não'}</span></div>
+                        </div>
+                        
+                        <h3>📖 Sobre o curso</h3>
+                        <p style="color: #6b7280; line-height: 1.6; margin: 15px 0;">
+                            ${cursoData.descricao || `Curso completo de ${curso} para você se tornar um especialista na área.`}
+                        </p>
+                        
+                        <h3>📚 Tópicos abordados</h3>
+                        <div class="topicos">
+                            ${conteudo.topicos.map(t => `<span class="topico">${t}</span>`).join('')}
+                        </div>
+                        
+                        <h3>💼 Projetos que você vai criar</h3>
+                        <div class="topicos">
+                            ${conteudo.projetos.map(p => `<span class="topico">📌 ${p}</span>`).join('')}
+                        </div>
+                        
+                        <button class="btn-concluir" id="btnConcluir" onclick="marcarConcluido()">
+                            ✅ Marcar como Concluído
+                        </button>
+                    </div>
+                `;
+
+                // Verificar se já concluiu este curso
+                await verificarCursoConcluido();
+
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('detalhesContainer').innerHTML = `
+                    <div class="curso-card">
+                        <p style="color:red;">Erro ao carregar detalhes do curso</p>
+                        <button class="btn-voltar" onclick="window.location.href='cursos.html'">Voltar</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function verificarCursoConcluido() {
+            try {
+                const response = await fetch(`${API_URL}/progresso/meu-progresso`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                const concluido = data.cursos_concluidos?.some(c => c.curso_nome === curso);
+
+                if (concluido) {
+                    jaConcluiu = true;
+                    const btn = document.getElementById('btnConcluir');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.textContent = '✅ Curso já concluído!';
+                        btn.classList.add('concluido');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar:', error);
+            }
+        }
+
+        async function marcarConcluido() {
+            if (jaConcluiu) {
+                alert('Você já concluiu este curso!');
+                return;
+            }
+
+            const btn = document.getElementById('btnConcluir');
+            btn.disabled = true;
+            btn.textContent = '⏳ Salvando...';
+
+            try {
+                const response = await fetch(`${API_URL}/progresso/concluir-curso`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        curso_nome: curso,
+                        trilha_nome: decodeURIComponent(area),
+                        horas_dedicadas: 40
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const msgDiv = document.getElementById('mensagemSucesso');
+                    msgDiv.style.display = 'block';
+                    msgDiv.innerHTML = `
+                        🎉 ${data.message}<br>
+                        ${data.conquista ? `🏆 Nova conquista: ${data.conquista}! +50 pontos` : ''}
+                        <br>⭐ +100 pontos!
+                    `;
+
+                    btn.textContent = '✅ Curso concluído!';
+                    btn.classList.add('concluido');
+                    jaConcluiu = true;
+
+                    // Buscar próximo curso
+                    await buscarProximoCurso();
+
+                    // Esconder mensagem após 5 segundos
+                    setTimeout(() => {
+                        msgDiv.style.display = 'none';
+                    }, 5000);
+                } else {
+                    alert(data.message || 'Erro ao marcar curso');
+                    btn.disabled = false;
+                    btn.textContent = '✅ Marcar como Concluído';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao marcar curso como concluído');
+                btn.disabled = false;
+                btn.textContent = '✅ Marcar como Concluído';
+            }
+        }
+
+        async function buscarProximoCurso() {
+            try {
+                const response = await fetch(`${API_URL}/progresso/proximo-curso`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.proximo_curso) {
+                    let nivelTexto = '';
+                    if (data.nivel_atual === 1) nivelTexto = '🌱 Iniciante';
+                    else if (data.nivel_atual === 2) nivelTexto = '📘 Intermediário';
+                    else nivelTexto = '🚀 Avançado';
+
+                    document.getElementById('proximoCurso').style.display = 'block';
+                    document.getElementById('proximoCurso').innerHTML = `
+                        <h4>🎯 Próximo curso recomendado</h4>
+                        <p><strong>${data.proximo_curso}</strong></p>
+                        <p>Seu nível atual: ${nivelTexto}</p>
+                        <p>📚 Total de cursos concluídos: ${data.total_concluidos}</p>
+                        <button class="btn-proximo" onclick="window.location.href='cursos.html'">
+                            🔍 Ver este curso
+                        </button>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        // Iniciar
+        carregarDetalhes();
+    </script>
+</body>
+
+</html>
